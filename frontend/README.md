@@ -1,0 +1,1 @@
+pr template 설정 테스트
