@@ -1,0 +1,10 @@
+export const COLORS = {
+  WHITE: "#F2F3F4",
+  LIGHT_GRAY: "#F0F0F0",
+  BLACK: "#17171B",
+  MOEL_DARK_GRAY: "#575757",
+  MOEL_BLUE: "#003866",
+  GREEN: "#396A36",
+  LIGHT_GREEN: "#A3CD16",
+};
+
