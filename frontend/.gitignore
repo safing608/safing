@@ -50,8 +50,11 @@ app-example
 .env.test.local
 .env.local
 
-# Editors
+# Editors & AI tooling
 .vscode/
+.claude/
+AGENTS.md
+CLAUDE.md
 .idea/
 *.suo
 *.ntvs*
