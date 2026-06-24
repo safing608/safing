@@ -4,11 +4,7 @@ import { StyleSheet, View } from 'react-native';
 interface ChatScreenProps {}
 
 function ChatScreen({}: ChatScreenProps) {
-  return (
-    <View style={styles.container}>
-      
-    </View>
-  );
+  return <View style={styles.container}></View>;
 }
 
 const styles = StyleSheet.create({
