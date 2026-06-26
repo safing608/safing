@@ -7,6 +7,7 @@ import Spinner from "@/components/common/Spinner";
 import { COLORS } from "@/constants/colors";
 import { FONT_SIZES, SPACING } from "@/constants/sizes";
 import { Ionicons } from "@expo/vector-icons";
+import { Link } from "expo-router";
 import React from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 
@@ -14,6 +15,15 @@ export default function ComponentsGallery() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.title}>예시 컴포넌트</Text>
+
+      {/* 임시용 라우터 */}
+      <View style={[styles.section, {gap: SPACING.MEDIUM}]}> 
+        <Link href="/(main)/chat">메인 화면으로 이동</Link>
+        <Link href="/(main)/chat/[id]">메인 화면으로 이동</Link>
+        <Link href="/(onboarding)">온보딩 화면으로 이동</Link>
+        <Link href="/(onboarding)/login">로그인 화면으로 이동</Link>
+        <Link href="/language">설정 화면으로 이동</Link>
+      </View>
 
       {/* ChatInput 컴포넌트 */}
       <View style={styles.section}>

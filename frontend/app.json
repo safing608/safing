@@ -10,16 +10,19 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.safing.app"
+      "bundleIdentifier": "com.safing.app",
+      "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
+      "supportsTablet": false,
       "adaptiveIcon": {
         "backgroundColor": "#ffffff",
         "foregroundImage": "./assets/logo/safing_logo.png"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.safing.app"
+      "package": "com.safing.app",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "output": "static",
@@ -37,7 +40,22 @@
           "backgroundColor": "#ffffff"
         }
       ],
-      "expo-asset"
+      "expo-asset",
+      [
+        "expo-font",
+        {
+          "fonts": [
+            "assets/fonts/Pretendard-Thin.otf",
+            "assets/fonts/Pretendard-Light.otf",
+            "assets/fonts/Pretendard-Regular.otf",
+            "assets/fonts/Pretendard-Medium.otf",
+            "assets/fonts/Pretendard-SemiBold.otf",
+            "assets/fonts/Pretendard-ExtraBold.otf",
+            "assets/fonts/Pretendard-Black.otf"
+          ]
+        }
+      ],
+      "@react-native-google-signin/google-signin"
     ],
     "experiments": {
       "typedRoutes": true,

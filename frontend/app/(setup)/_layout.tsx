@@ -12,7 +12,7 @@ export default function SetupLayout() {
         },
       }}
     >
-      <Stack.Screen name="index" options={{ headerShown: false, title: "" }} />
+      <Stack.Screen name="language" options={{ headerShown: false, title: "" }} />
     </Stack>
   );
 }
