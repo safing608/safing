@@ -8,6 +8,7 @@
     "scheme": "safing",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "package": "com.safing.app",
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.safing.app",

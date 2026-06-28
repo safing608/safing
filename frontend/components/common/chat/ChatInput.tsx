@@ -77,6 +77,7 @@ const ChatInput = forwardRef<TextInput, ChatInputProps>(
             style={styles.input}
             placeholder={placeholder}
             placeholderTextColor={COLORS.MOEL_DARK_GRAY}
+            returnKeyType="send"
             onChangeText={handleChangeText}
             onBlur={onBlur}
             autoCapitalize="none"
