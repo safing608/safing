@@ -3,9 +3,7 @@ package com.safing.backend.auth.repository;
 import com.safing.backend.auth.entity.RefreshToken;
 import com.safing.backend.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
