@@ -4,11 +4,12 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { SplashScreen, Stack } from "expo-router";
 import "react-native-reanimated";
 import { useFonts } from "expo-font";
-import { useEffect } from "react";
 
 export const unstable_settings = {
-  anchor: "(tabs)",
+  initialRouteName: "index",
 };
+
+SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   useReactQueryDevTools(queryClient);
@@ -21,8 +22,6 @@ export default function RootLayout() {
 }
 
 function RootNavigator() {
-  SplashScreen.preventAutoHideAsync();
-
   const [loaded, error] = useFonts({
     "Pretendard-Thin": require("@/assets/fonts/Pretendard-Thin.otf"),
     "Pretendard-Light": require("@/assets/fonts/Pretendard-Light.otf"),
@@ -33,12 +32,6 @@ function RootNavigator() {
     "Pretendard-Black": require("@/assets/fonts/Pretendard-Black.otf"),
   });
 
-  useEffect(() => {
-    if (loaded || error) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded, error]);
-
   if (!loaded && !error) {
     return null;
   }
@@ -46,8 +39,8 @@ function RootNavigator() {
   return (
     <Stack>
       <Stack.Screen name="index" options={{ headerShown: false }} />
-      <Stack.Screen name="(dev)" options={{ headerShown: false }} />
       <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
+      <Stack.Screen name="(dev)" options={{ headerShown: false }} />
       <Stack.Screen name="(setup)" options={{ headerShown: false }} />
       <Stack.Screen name="(main)" options={{ headerShown: false }} />
     </Stack>

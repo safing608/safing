@@ -4,7 +4,7 @@
     "slug": "SAFING",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/logo/safing_logo.png",
+    "icon": "./assets/logo/safing_not_title.png",
     "scheme": "safing",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
@@ -17,8 +17,9 @@
     "android": {
       "supportsTablet": false,
       "adaptiveIcon": {
-        "backgroundColor": "#ffffff",
-        "foregroundImage": "./assets/logo/safing_logo.png"
+        "backgroundColor": "#FAFAFA",
+        "foregroundImage": "./assets/logo/safing_not_title.png",
+        "resizeMode": "contain"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
@@ -27,7 +28,7 @@
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/logo/safing_logo.png",
+      "favicon": "./assets/logo/safing_not_title.png",
       "bundleIdentifier": "com.safing.app"
     },
     "plugins": [
@@ -35,10 +36,7 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/logo/safing_white.png",
-          "imageWidth": 160,
-          "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "backgroundColor": "#FAFAFA"
         }
       ],
       "expo-asset",
