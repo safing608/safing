@@ -2,9 +2,10 @@ import FontText from "@/components/common/FontText";
 import IconButton from "@/components/common/IconButton";
 import { COLORS } from "@/constants/colors";
 import { FONT_SIZES, SPACING } from "@/constants/sizes";
-import { menuItems, mockChatItem } from "@/mock/chat";
+import { mockChatItem } from "@/mock/chat";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import {
   Modal,
   Pressable,
@@ -33,9 +34,23 @@ function ChatDrawer({
   const { width } = useWindowDimensions();
   const drawerWidth = Math.min(width * 0.8, 320); // 최대 320px
 
-  const menuItemsData = menuItems;
-  const mockChatItemData = mockChatItem;
+  const { t } = useTranslation();
 
+  // 메뉴 아이템 데이터
+  const menuItemsData = [
+    {
+      id: "newChat",
+      icon: "add-circle-outline" as const,
+      title: t("chat.drawer_new_chat"),
+    },
+    {
+      id: "language",
+      icon: "language" as const,
+      title: t("chat.drawer_language"),
+    },
+  ];
+
+  const mockChatItemData = mockChatItem;
 
   return (
     <Modal
@@ -105,7 +120,7 @@ function ChatDrawer({
                     color={COLORS.BLACK}
                     style={styles.sectionTitle}
                   >
-                    대화 내역
+                    {t("chat.drawer_chat_history")}
                   </FontText>
                 </View>
 

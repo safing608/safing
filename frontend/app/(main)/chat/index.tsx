@@ -4,6 +4,7 @@ import { COLORS } from "@/constants/colors";
 import { FONT_SIZES, SPACING } from "@/constants/sizes";
 import useKeyboard from "@/hooks/useKeyboard";
 import React, { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Animated,
   LayoutChangeEvent,
@@ -16,6 +17,7 @@ interface ChatScreenProps {}
 
 function ChatScreen({}: ChatScreenProps) {
   const { isKeyboardVisible, keyboardHeight } = useKeyboard();
+  const { t } = useTranslation();
 
   const [inputHeight, setInputHeight] = useState(0);
 
@@ -56,14 +58,14 @@ function ChatScreen({}: ChatScreenProps) {
           size={FONT_SIZES.H3}
           style={{ textAlign: "center", lineHeight: 36 }}
         >
-          안녕하세요!
+          {t("chat.welcome_message")}
         </FontText>
         <FontText
           weight="regular"
           size={FONT_SIZES.H3}
           style={{ textAlign: "center", lineHeight: 36 }}
         >
-          작업 중 궁금한 안전사항이나 위험사항을 언제든 질문해주세요.
+          {t("chat.start_message")}
         </FontText>
       </View>
 

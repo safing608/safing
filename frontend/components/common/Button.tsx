@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { COLORS } from "@/constants/colors";
 import { FONT_SIZES, SIZES, SPACING } from "@/constants/sizes";
+import FontText from "./FontText";
 
 interface ButtonProps extends PressableProps {
   label: string;
@@ -49,7 +50,7 @@ function Button({
 
     // 텍스트만
     if (!icon && label) {
-      return <Text style={[textStyleArray, textStyle]}>{label}</Text>;
+      return <FontText style={[textStyleArray, textStyle]}>{label}</FontText>;
     }
 
     // 아이콘 + 텍스트
@@ -59,7 +60,7 @@ function Button({
           {iconPosition === "left" && (
             <View style={styles.iconContainer}>{icon}</View>
           )}
-          <Text style={[textStyleArray, textStyle]}>{label}</Text>
+          <FontText style={[textStyleArray, textStyle]}>{label}</FontText>
           {iconPosition === "right" && (
             <View style={styles.iconContainer}>{icon}</View>
           )}
@@ -68,7 +69,7 @@ function Button({
     }
 
     // 기본 텍스트
-    return <Text style={textStyleArray}>{label}</Text>;
+    return <FontText style={textStyleArray}>{label}</FontText>;
   };
 
   return (

@@ -1,17 +1,3 @@
-// 메뉴 아이템 리스트
-export const menuItems = [
-  {
-    id: "newChat",
-    icon: "add-circle-outline" as const,
-    title: "새로운 대화",
-  },
-  {
-    id: "language",
-    icon: "language" as const,
-    title: "언어 변경",
-  },
-];
-
 // MOCK: 대화 내역 데이터
 export const mockChatItem = [
   "안전사고 대응 문의",

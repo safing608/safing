@@ -4,7 +4,7 @@
     "slug": "SAFING",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/logo/safing_not_title.png",
+    "icon": "./assets/logo/icon.png",
     "scheme": "safing",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
@@ -18,7 +18,7 @@
       "supportsTablet": false,
       "adaptiveIcon": {
         "backgroundColor": "#FAFAFA",
-        "foregroundImage": "./assets/logo/safing_not_title.png",
+        "foregroundImage": "./assets/logo/icon.png",
         "resizeMode": "contain"
       },
       "edgeToEdgeEnabled": true,
@@ -28,7 +28,7 @@
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/logo/safing_not_title.png",
+      "favicon": "./assets/logo/icon.png",
       "bundleIdentifier": "com.safing.app"
     },
     "plugins": [
@@ -54,7 +54,8 @@
           ]
         }
       ],
-      "@react-native-google-signin/google-signin"
+      "@react-native-google-signin/google-signin",
+      "expo-localization"
     ],
     "experiments": {
       "typedRoutes": true,

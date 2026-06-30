@@ -45,10 +45,10 @@ export default function ComponentsGallery() {
 
       {/* 임시용 라우터 */}
       <View style={[styles.section, { gap: SPACING.MEDIUM }]}>
-        <Link href="/(main)/chat">메인 화면으로 이동</Link>
-        <Link href="/(main)/chat/[id]">메인 화면으로 이동</Link>
-        <Link href="/(onboarding)">온보딩 화면으로 이동</Link>
-        <Link href="/(onboarding)/login">로그인 화면으로 이동</Link>
+        <Link href="/chat">메인 화면으로 이동</Link>
+        <Link href="/chat/[id]">메인 화면으로 이동</Link>
+        <Link href="/">온보딩 화면으로 이동</Link>
+        <Link href="/login">로그인 화면으로 이동</Link>
         <Link href="/language">설정 화면으로 이동</Link>
       </View>
 
@@ -83,22 +83,22 @@ export default function ComponentsGallery() {
           />
           <LanguageCard
             countryCode="US"
-            languageName="영어"
+            languageName="English"
             isSelected={true}
           />
           <LanguageCard
             countryCode="KH"
-            languageName="캄보디아어"
+            languageName="ខ្មែរ"
             isSelected={false}
           />
           <LanguageCard
             countryCode="VN"
-            languageName="베트남어"
+            languageName="Tiếng Việt"
             isSelected={false}
           />
           <LanguageCard
             countryCode="NP"
-            languageName="네팔어"
+            languageName="नेपाली"
             isSelected={false}
           />
         </View>
