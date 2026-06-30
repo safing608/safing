@@ -1,19 +1,66 @@
 import Button from "@/components/common/Button";
 import ChatInput from "@/components/common/chat/ChatInput";
-import ChatBubble from "@/components/common/ChatBubble";
+import ChatDrawer from "@/components/common/chat/ChatDrawer";
+import ChatHeader from "@/components/common/chat/ChatHeader";
+import ChatBubble from "@/components/common/chat/ChatBubble";
 import IconButton from "@/components/common/IconButton";
 import LanguageCard from "@/components/common/LanguageCard";
 import Spinner from "@/components/common/Spinner";
 import { COLORS } from "@/constants/colors";
 import { FONT_SIZES, SPACING } from "@/constants/sizes";
 import { Ionicons } from "@expo/vector-icons";
-import React from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { Link } from "expo-router";
+import React, { useState } from "react";
+import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
+import Toast from "react-native-toast-message";
 
 export default function ComponentsGallery() {
+  const [drawerVisible, setDrawerVisible] = useState(false);
+
+  const handleMenuPress = () => {
+    setDrawerVisible(true);
+  };
+
+  const handleDrawerClose = () => {
+    setDrawerVisible(false);
+  };
+
+  const handleNewChat = () => {
+    setDrawerVisible(false);
+    Alert.alert("새로운 대화", "새 채팅이 시작됩니다.");
+  };
+
+  const handleLanguageChange = () => {
+    setDrawerVisible(false);
+    Alert.alert("언어 변경", "언어 선택 화면이 열립니다.");
+  };
+
+  const handleChatHistory = () => {
+    setDrawerVisible(false);
+    Alert.alert("대화 내역", "이전 대화로 이동합니다.");
+  };
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.title}>예시 컴포넌트</Text>
+
+      {/* 임시용 라우터 */}
+      <View style={[styles.section, { gap: SPACING.MEDIUM }]}>
+        <Link href="/chat">메인 화면으로 이동</Link>
+        <Link href="/chat/[id]">메인 화면으로 이동</Link>
+        <Link href="/">온보딩 화면으로 이동</Link>
+        <Link href="/login">로그인 화면으로 이동</Link>
+        <Link href="/language">설정 화면으로 이동</Link>
+      </View>
+
+      {/* ChatHeader & Drawer 컴포넌트 */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>ChatHeader & Drawer</Text>
+        <ChatHeader onMenuPress={handleMenuPress} />
+        <Text style={styles.subTitle}>
+          우상단 메뉴 버튼을 클릭해서 Drawer를 테스트해보세요!
+        </Text>
+      </View>
 
       {/* ChatInput 컴포넌트 */}
       <View style={styles.section}>
@@ -24,13 +71,38 @@ export default function ComponentsGallery() {
       {/* LanguageCard 컴포넌트 */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>LanguageCard</Text>
-      <View style={[styles.section,{flexDirection: "row", gap: SPACING.MEDIUM, flexWrap: "wrap"}]}>
-        <LanguageCard countryCode="KR" languageName="한국어" isSelected={false} />
-        <LanguageCard countryCode="US" languageName="영어" isSelected={true} />
-        <LanguageCard countryCode="KH" languageName="캄보디아어" isSelected={false} />
-        <LanguageCard countryCode="VN" languageName="베트남어" isSelected={false} />
-        <LanguageCard countryCode="NP" languageName="네팔어" isSelected={false} />
-      </View>
+        <View
+          style={[
+            styles.section,
+            { flexDirection: "row", gap: SPACING.MEDIUM, flexWrap: "wrap" },
+          ]}
+        >
+          <LanguageCard
+            countryCode="KR"
+            languageName="한국어"
+            isSelected={false}
+          />
+          <LanguageCard
+            countryCode="US"
+            languageName="English"
+            isSelected={true}
+          />
+          <LanguageCard
+            countryCode="KH"
+            languageName="ខ្មែរ"
+            isSelected={false}
+          />
+          <LanguageCard
+            countryCode="VN"
+            languageName="Tiếng Việt"
+            isSelected={false}
+          />
+          <LanguageCard
+            countryCode="NP"
+            languageName="नेपाली"
+            isSelected={false}
+          />
+        </View>
       </View>
 
       {/* chat bubble 컴포넌트 */}
@@ -38,12 +110,31 @@ export default function ComponentsGallery() {
         <Text style={styles.sectionTitle}>ChatBubble</Text>
         <View style={styles.chatContainer}>
           <ChatBubble role="user" text="안전모를 착용해야 하나요?" />
-          <ChatBubble role="assistant" text="네, 작업 현장에서는 반드시 안전모를 착용해야 합니다. 낙하물로부터 머리를 보호하기 위해 필수적입니다." />
+          <ChatBubble
+            role="assistant"
+            text="네, 작업 현장에서는 반드시 안전모를 착용해야 합니다. 낙하물로부터 머리를 보호하기 위해 필수적입니다."
+          />
           <ChatBubble role="user" text="화학물질 취급할 때 주의사항은?" />
-          <ChatBubble role="assistant" text="화학물질 취급 시에는 보호장갑, 보호안경, 마스크를 착용하고 환기가 잘 되는 곳에서 작업하세요. MSDS(물질안전보건자료)를 꼭 확인하시기 바랍니다." />
-          <ChatBubble role="user" text="에러 테스트" userError="네트워크 연결을 확인해주세요" />
-          <ChatBubble role="assistant" text="서버 연결 실패" assistantError="응답 생성 중 오류 발생" />
-          <ChatBubble role="assistant" text="서버 연결 실패" assistantError="응답 생성 중 오류 발생" onRetry={() => console.log("Retry clicked")} />
+          <ChatBubble
+            role="assistant"
+            text="화학물질 취급 시에는 보호장갑, 보호안경, 마스크를 착용하고 환기가 잘 되는 곳에서 작업하세요. MSDS(물질안전보건자료)를 꼭 확인하시기 바랍니다."
+          />
+          <ChatBubble
+            role="user"
+            text="에러 테스트"
+            userError="네트워크 연결을 확인해주세요"
+          />
+          <ChatBubble
+            role="assistant"
+            text="서버 연결 실패"
+            assistantError="응답 생성 중 오류 발생"
+          />
+          <ChatBubble
+            role="assistant"
+            text="서버 연결 실패"
+            assistantError="응답 생성 중 오류 발생"
+            onRetry={() => console.log("Retry clicked")}
+          />
         </View>
       </View>
 
@@ -362,9 +453,63 @@ export default function ComponentsGallery() {
         </View>
       </View>
 
+      {/* Toast 컴포넌트 */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Toast</Text>
+        <View style={[styles.buttonRow, { gap: SPACING.MEDIUM }]}>
+          <Button
+            label="Success"
+            size="small"
+            onPress={() =>
+              Toast.show({
+                type: "success",
+                text1: "언어가 변경되었습니다.",
+                position: "bottom",
+                visibilityTime: 2000,
+              })
+            }
+          />
+          <Button
+            label="Error"
+            size="small"
+            variant="outline"
+            onPress={() =>
+              Toast.show({
+                type: "error",
+                text1: "오류가 발생했습니다.",
+                position: "bottom",
+                visibilityTime: 2000,
+              })
+            }
+          />
+          <Button
+            label="Info"
+            size="small"
+            variant="outline"
+            onPress={() =>
+              Toast.show({
+                type: "info",
+                text1: "새로운 알림이 있습니다.",
+                position: "bottom",
+                visibilityTime: 2000,
+              })
+            }
+          />
+        </View>
+      </View>
+
       <View style={styles.footer}>
         <Text style={styles.footerText}>개발용 컴포넌트 갤러리</Text>
       </View>
+
+      {/* ChatDrawer - 테스트용 */}
+      <ChatDrawer
+        visible={drawerVisible}
+        onClose={handleDrawerClose}
+        onNewChat={handleNewChat}
+        onLanguageChange={handleLanguageChange}
+        onChatHistory={handleChatHistory}
+      />
     </ScrollView>
   );
 }

@@ -7,6 +7,5 @@ export const COLORS = {
   GREEN: "#396A36",
   LIGHT_GREEN: "#A3CD16",
   ERROR_RED: "#C62828",
-  ERROR_RED_BG: "#FDECEA"
+  ERROR_RED_BG: "#FDECEA",
 };
-

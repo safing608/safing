@@ -9,10 +9,10 @@ import {
 } from "react-native";
 import { COLORS } from "@/constants/colors";
 import { SPACING } from "@/constants/sizes";
+import { useTranslation } from "react-i18next";
 
 interface ChatInputProps extends TextInputProps {
   onSend?: (message: string) => void;
-  placeholder?: string;
   maxLength?: number;
   // React Hook Form 연동을 위한 props
   onChangeText?: (text: string) => void;
@@ -22,19 +22,12 @@ interface ChatInputProps extends TextInputProps {
 
 const ChatInput = forwardRef<TextInput, ChatInputProps>(
   (
-    {
-      onSend,
-      placeholder = "질문을 입력해주세요.",
-      maxLength = 500,
-      onChangeText,
-      onBlur,
-      name,
-      ...textInputProps
-    },
+    { onSend, maxLength = 500, onChangeText, onBlur, name, ...textInputProps },
     ref,
   ) => {
     // 버튼 표시/숨김을 위한 최소한의 상태만 관리
     const [hasText, setHasText] = useState(false);
+    const { t } = useTranslation();
     const textRef = useRef("");
 
     // 텍스트 변경 핸들러 - 재렌더링 최소화
@@ -75,8 +68,9 @@ const ChatInput = forwardRef<TextInput, ChatInputProps>(
           <TextInput
             ref={ref}
             style={styles.input}
-            placeholder={placeholder}
+            placeholder={t("chat.input_placeholder")}
             placeholderTextColor={COLORS.MOEL_DARK_GRAY}
+            returnKeyType="send"
             onChangeText={handleChangeText}
             onBlur={onBlur}
             autoCapitalize="none"
@@ -131,6 +125,7 @@ const styles = StyleSheet.create({
     color: COLORS.BLACK,
     paddingVertical: SPACING.XS,
     textAlignVertical: "center",
+    fontFamily: "Pretendard_Regular",
   },
   sendButton: {
     width: 32,
