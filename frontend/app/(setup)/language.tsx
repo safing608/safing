@@ -1,3 +1,4 @@
+import Button from "@/components/common/Button";
 import FontText from "@/components/common/FontText";
 import LanguageCard from "@/components/common/LanguageCard";
 import { COLORS } from "@/constants/colors";
@@ -5,6 +6,7 @@ import { COUNTRY_CODE_TO_LANGUAGE, LANGUAGE_OPTIONS } from "@/constants/i18n";
 import { FONT_SIZES, SPACING } from "@/constants/sizes";
 import { useUserStore } from "@/stores/userStore";
 import { dev } from "@/utils/dev";
+import { router } from "expo-router";
 import React, { useCallback } from "react";
 import { StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -13,6 +15,13 @@ function LanguageScreen() {
   const language = useUserStore((state) => state.language);
   const hasSetLanguage = useUserStore((state) => state.hasSetLanguage);
   const setLanguage = useUserStore((state) => state.setLanguage);
+
+  // 언어 선택 확인
+  const handleSubmit = () => {
+    dev.log("language", language);
+    // TODO: 언어 설정 후 메인 화면으로 이동
+    router.push("/chat");
+  };
 
   // 언어 선택 시 언어 설정
   const handleSelect = useCallback(
@@ -58,6 +67,12 @@ function LanguageScreen() {
             />
           ))}
         </View>
+        <Button
+          label="확인"
+          onPress={handleSubmit}
+          variant="blueFilled"
+          pressableStyle={styles.confirmButton}
+        />
       </View>
     </SafeAreaView>
   );
@@ -89,6 +104,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: SPACING.LARGE,
     maxWidth: 300,
+  },
+  confirmButton: {
+    width: "60%",
   },
 });
 

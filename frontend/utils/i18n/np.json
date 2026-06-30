@@ -6,7 +6,11 @@
       "input_placeholder": "कृपया आफ्नो प्रश्न प्रविष्ट गर्नुहोस्।",
       "drawer_new_chat": "नयाँ कुराकानी",
       "drawer_language": "भाषा परिवर्तन",
-      "drawer_chat_history": "कुराकानी इतिहास"
-    }
+        "drawer_chat_history": "कुराकानी इतिहास"
+      },
+      "language": {
+        "select_language": "कृपया भाषा छान्नुहोस्।",
+        "changed": "भाषा परिवर्तन भयो।"
+      }
   }
 }

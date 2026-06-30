@@ -36,20 +36,6 @@ function ChatDrawer({
 
   const { t } = useTranslation();
 
-  // 메뉴 아이템 데이터
-  const menuItemsData = [
-    {
-      id: "newChat",
-      icon: "add-circle-outline" as const,
-      title: t("chat.drawer_new_chat"),
-    },
-    {
-      id: "language",
-      icon: "language" as const,
-      title: t("chat.drawer_language"),
-    },
-  ];
-
   const mockChatItemData = mockChatItem;
 
   return (
@@ -59,12 +45,12 @@ function ChatDrawer({
       animationType="fade"
       onRequestClose={onClose}
     >
-      {/* Background Overlay */}
+      {/* 배경 Overlay */}
       <Pressable style={styles.overlay} onPress={onClose}>
-        {/* Drawer Container */}
+        {/* 드로어 컨테이너 */}
         <View style={[styles.drawerContainer, { width: drawerWidth }]}>
           <SafeAreaView style={styles.safeArea}>
-            {/* Header */}
+            {/* 헤더 */}
             <View style={styles.header}>
               <IconButton
                 icon={<Ionicons name="close" size={24} color={COLORS.BLACK} />}
@@ -73,40 +59,50 @@ function ChatDrawer({
               />
             </View>
 
-            {/* Content */}
+            {/* 메뉴 목록 */}
             <ScrollView
               style={styles.content}
               showsVerticalScrollIndicator={false}
             >
-              {/* Menu Items */}
               <View>
-                {menuItemsData.map((item) => (
-                  <Pressable
-                    key={item.id}
-                    style={styles.menuItem}
-                    onPress={() => {}}
+                {/* 새로운 대화 */}
+                <Pressable style={styles.menuItem} onPress={onNewChat}>
+                  <MaterialIcons
+                    name="add-circle-outline"
+                    size={20}
+                    color={COLORS.MOEL_BLUE}
+                  />
+                  <FontText
+                    weight="medium"
+                    size={FONT_SIZES.BODY}
+                    color={COLORS.BLACK}
+                    style={styles.menuText}
                   >
-                    <MaterialIcons
-                      name={item.icon}
-                      size={20}
-                      color={COLORS.MOEL_BLUE}
-                    />
-                    <FontText
-                      weight="medium"
-                      size={FONT_SIZES.BODY}
-                      color={COLORS.BLACK}
-                      style={styles.menuText}
-                    >
-                      {item.title}
-                    </FontText>
-                  </Pressable>
-                ))}
+                    {t("chat.drawer_new_chat")}
+                  </FontText>
+                </Pressable>
+                {/* 언어 변경 */}
+                <Pressable style={styles.menuItem} onPress={onLanguageChange}>
+                  <MaterialIcons
+                    name="language"
+                    size={20}
+                    color={COLORS.MOEL_BLUE}
+                  />
+                  <FontText
+                    weight="medium"
+                    size={FONT_SIZES.BODY}
+                    color={COLORS.BLACK}
+                    style={styles.menuText}
+                  >
+                    {t("chat.drawer_language")}
+                  </FontText>
+                </Pressable>
               </View>
 
               {/* Divider */}
               <View style={styles.divider} />
 
-              {/* Chat History Section */}
+              {/* 대화 목록 */}
               <View style={styles.historySection}>
                 <View style={styles.historyItemHeader}>
                   <MaterialIcons

@@ -1,5 +1,6 @@
 import ChatDrawer from "@/components/common/chat/ChatDrawer";
 import ChatHeader from "@/components/common/chat/ChatHeader";
+import LanguageSheet from "@/components/common/LanguageSheet";
 import { COLORS } from "@/constants/colors";
 import { SPACING } from "@/constants/sizes";
 import { Stack, useRouter } from "expo-router";
@@ -9,6 +10,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function MainLayout() {
   const [drawerVisible, setDrawerVisible] = useState(false);
+  const [languageSheetVisible, setLanguageSheetVisible] = useState(false);
   const router = useRouter();
 
   // 채팅 드로어 열기
@@ -27,11 +29,9 @@ export default function MainLayout() {
     router.push("/chat");
   };
 
-  // 언어 변경 클릭 시 ActionSheet로 언어 선택 구현
   const handleLanguageChange = () => {
     setDrawerVisible(false);
-    // TODO: ActionSheet로 언어 선택 구현
-    Alert.alert("언어 변경", "ActionSheet로 구현 예정입니다.");
+    setLanguageSheetVisible(true);
   };
 
   // 대화 내역 클릭 시 대화 내역 화면으로 이동
@@ -70,6 +70,11 @@ export default function MainLayout() {
           onNewChat={handleNewChat}
           onLanguageChange={handleLanguageChange}
           onChatHistory={handleChatHistory}
+        />
+
+        <LanguageSheet
+          visible={languageSheetVisible}
+          onClose={() => setLanguageSheetVisible(false)}
         />
       </View>
     </SafeAreaView>

@@ -9,6 +9,9 @@ import { initReactI18next } from "react-i18next";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { DEFAULT_LANGUAGE } from "@/constants/i18n";
 import { useUserStore } from "@/stores/userStore";
+import { dev } from "@/utils/dev";
+import Toast from "react-native-toast-message";
+import toastConfig from "@/components/common/ToastConfig";
 
 // 저장된 언어 확인하고 i18n 초기화
 const initializeI18n = (() => {
@@ -33,7 +36,7 @@ const initializeI18n = (() => {
       // AsyncStorage 오류 시 기본 언어 사용
     }
 
-    console.log("initialLanguage", initialLanguage);
+    dev.log("initialLanguage", initialLanguage);
 
     await use(initReactI18next).init({
       resources: {
@@ -70,6 +73,7 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <RootNavigator isHydrated={isHydrated} />
+      <Toast config={toastConfig} topOffset={80} bottomOffset={80} />
     </QueryClientProvider>
   );
 }

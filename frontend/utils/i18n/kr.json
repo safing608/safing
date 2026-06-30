@@ -7,6 +7,10 @@
       "drawer_new_chat": "새로운 대화",
       "drawer_language": "언어 변경",
       "drawer_chat_history": "대화 내역"
+    },
+    "language": {
+      "select_language": "언어를 선택해주세요.",
+      "changed": "언어가 변경되었습니다."
     }
   }
 }

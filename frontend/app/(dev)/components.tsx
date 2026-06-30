@@ -12,6 +12,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Link } from "expo-router";
 import React, { useState } from "react";
 import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
+import Toast from "react-native-toast-message";
 
 export default function ComponentsGallery() {
   const [drawerVisible, setDrawerVisible] = useState(false);
@@ -448,6 +449,51 @@ export default function ComponentsGallery() {
             label="Primary"
             size="small"
             onPress={() => console.log("Primary clicked")}
+          />
+        </View>
+      </View>
+
+      {/* Toast 컴포넌트 */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Toast</Text>
+        <View style={[styles.buttonRow, { gap: SPACING.MEDIUM }]}>
+          <Button
+            label="Success"
+            size="small"
+            onPress={() =>
+              Toast.show({
+                type: "success",
+                text1: "언어가 변경되었습니다.",
+                position: "bottom",
+                visibilityTime: 2000,
+              })
+            }
+          />
+          <Button
+            label="Error"
+            size="small"
+            variant="outline"
+            onPress={() =>
+              Toast.show({
+                type: "error",
+                text1: "오류가 발생했습니다.",
+                position: "bottom",
+                visibilityTime: 2000,
+              })
+            }
+          />
+          <Button
+            label="Info"
+            size="small"
+            variant="outline"
+            onPress={() =>
+              Toast.show({
+                type: "info",
+                text1: "새로운 알림이 있습니다.",
+                position: "bottom",
+                visibilityTime: 2000,
+              })
+            }
           />
         </View>
       </View>

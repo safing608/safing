@@ -6,7 +6,11 @@
       "input_placeholder": "Vui lòng nhập câu hỏi của bạn.",
       "drawer_new_chat": "Cuộc trò chuyện mới",
       "drawer_language": "Thay đổi ngôn ngữ",
-      "drawer_chat_history": "Lịch sử trò chuyện"
-    }
+        "drawer_chat_history": "Lịch sử trò chuyện"
+      },
+      "language": {
+        "select_language": "Vui lòng chọn ngôn ngữ.",
+        "changed": "Ngôn ngữ đã được thay đổi."
+      }
   }
 }

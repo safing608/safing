@@ -3,6 +3,7 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { DEFAULT_LANGUAGE, type LanguageCode } from "@/constants/i18n";
 import { changeLanguage } from "i18next";
+import { dev } from "@/utils/dev";
 
 interface UserState {
   language: LanguageCode;
@@ -22,7 +23,7 @@ export const useUserStore = create<UserState>()(
       
       setLanguage: (language) => {
         set({ language, hasSetLanguage: true });
-        changeLanguage(language).catch(console.error);
+        changeLanguage(language).catch(dev.error);
       },
     }),
     {
