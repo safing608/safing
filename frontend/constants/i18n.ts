@@ -1,12 +1,11 @@
-export const LANGUAGES = ["kr", "en", "kh", "vn", "np"] as const;
+export type CountryCode = "KR" | "US" | "KH" | "VN" | "NP";
+export type LanguageName = "한국어" | "English" | "ខ្មែរ" | "Tiếng Việt" | "नेपाली";
 
-export type LanguageCode = (typeof LANGUAGES)[number];
-
-export const DEFAULT_LANGUAGE: LanguageCode = "kr";
+export const DEFAULT_LANGUAGE: CountryCode = "KR";
 
 export const LANGUAGE_OPTIONS: {
   countryCode: CountryCode;
-  languageName: "한국어" | "English" | "ខ្មែរ" | "Tiếng Việt" | "नेपाली";
+  languageName: LanguageName;
 }[] = [
   { countryCode: "KR", languageName: "한국어" },
   { countryCode: "US", languageName: "English" },
@@ -15,16 +14,3 @@ export const LANGUAGE_OPTIONS: {
   { countryCode: "NP", languageName: "नेपाली" },
 ];
 
-export const COUNTRY_CODE_TO_LANGUAGE = {
-  KR: "kr",
-  US: "en",
-  KH: "kh",
-  VN: "vn",
-  NP: "np",
-} as const;
-
-export type CountryCode = keyof typeof COUNTRY_CODE_TO_LANGUAGE;
-
-export function isLanguageCode(value: string): value is LanguageCode {
-  return (LANGUAGES as readonly string[]).includes(value);
-}

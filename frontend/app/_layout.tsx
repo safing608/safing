@@ -40,14 +40,14 @@ const initializeI18n = (() => {
 
     await use(initReactI18next).init({
       resources: {
-        kr: { translation: require("@/utils/i18n/kr.json").translation },
-        en: { translation: require("@/utils/i18n/en.json").translation },
-        kh: { translation: require("@/utils/i18n/kh.json").translation },
-        vn: { translation: require("@/utils/i18n/vn.json").translation },
-        np: { translation: require("@/utils/i18n/np.json").translation },
+        KR: { translation: require("@/utils/i18n/kr.json").translation },
+        US: { translation: require("@/utils/i18n/us.json").translation },
+        KH: { translation: require("@/utils/i18n/kh.json").translation },
+        VN: { translation: require("@/utils/i18n/vn.json").translation },
+        NP: { translation: require("@/utils/i18n/np.json").translation },
       },
       lng: initialLanguage, // 저장된 언어 또는 기본 한국어
-      fallbackLng: "kr",
+      fallbackLng: "KR",
       interpolation: {
         escapeValue: false,
       },
