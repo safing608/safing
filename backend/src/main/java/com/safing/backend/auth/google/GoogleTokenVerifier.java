@@ -4,8 +4,11 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
+import com.safing.backend.common.exception.InvalidIdTokenException;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.util.Collections;
 
 @Component
@@ -34,12 +37,13 @@ public class GoogleTokenVerifier {
             GoogleIdToken googleIdToken = verifier.verify(idToken);
 
             if (googleIdToken == null){
-                throw new IllegalArgumentException("유효하지 않은 Google ID Token 입니다.");
+                throw new InvalidIdTokenException();
             }
             return googleIdToken.getPayload();
-
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Google ID token 검증에 실패했습니다.");
+            
+            // verify() 과정에서 발생한 예외를 모두 커스텀 예외로 통일
+        } catch (GeneralSecurityException | IOException | IllegalArgumentException e) {
+            throw new InvalidIdTokenException();
         }
     }
 }

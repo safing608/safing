@@ -36,4 +36,15 @@ public class ApiResponse<T> {
                 data
         );
     }
+
+    /**
+     * 에러 응답 생성
+     */
+    public static <T> ApiResponse<T> error(ResponseCode code, String message) {
+        return new ApiResponse<>(
+                code,
+                message,
+                null
+        );
+    }
 }
