@@ -41,7 +41,7 @@ public class SecurityConfig {
                                 "/v3/api-docs/**"
                         ).permitAll()
 
-                        .anyRequest().authenticated()
+                        .anyRequest().permitAll()
                 )
                 .build(); // 설정완료 -> SecurityFilterChain 생성
     }
