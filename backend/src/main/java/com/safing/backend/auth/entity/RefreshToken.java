@@ -10,8 +10,6 @@ import java.time.LocalDateTime;
 @Table(name = "refresh_tokens")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
-@Builder
 public class RefreshToken {
 
     @Id
@@ -48,5 +46,17 @@ public class RefreshToken {
         return revokedAt == null && !expiredAt.isBefore(LocalDateTime.now());
     }
 
+    // 정적 팩토리 메서드
+    // static 메서드를 이용해 객체를 생성하는 방식
+    // 생성자를 직접 호출하지 않고, 의미 있는 이름을 가진 static 메서드를 통해 객체 생성
+    public static RefreshToken create(User user, String tokenHash, LocalDateTime expiredAt) {
+        RefreshToken refreshToken = new RefreshToken();
+
+        refreshToken.user = user;
+        refreshToken.tokenHash = tokenHash;
+        refreshToken.expiredAt = expiredAt;
+
+        return refreshToken;
+    }
 
 }

@@ -1,6 +1,6 @@
 package com.safing.backend.user.entity;
 
-import com.safing.backend.common.enumtype.LanguageCode;
+import com.safing.backend.common.enumtype.CountryCode;
 import com.safing.backend.common.enumtype.OAuthProvider;
 import jakarta.persistence.*;
 import lombok.*;
@@ -34,7 +34,7 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "language_code", nullable = false)
-    private LanguageCode languageCode;
+    private CountryCode countryCode;
 
     @Column(name = "is_deleted", nullable = false)
     @Builder.Default
@@ -50,4 +50,17 @@ public class User {
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
+
+    /**
+     * Google OAuth를 통해 최초 로그인한 사용자를 생성한다.
+     * userId와 생성/수정 시간은 JPA(Hibernate)가 자동으로 설정한다.
+     */
+    public static User createGoogleUser(String oauthId, String username, CountryCode languageCode) {
+        return User.builder()
+                .oauthProvider(OAuthProvider.GOOGLE)
+                .oauthId(oauthId)
+                .username(username)
+                .countryCode(languageCode)
+                .build();
+    }
 }

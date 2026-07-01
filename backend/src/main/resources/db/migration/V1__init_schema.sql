@@ -10,7 +10,7 @@ CREATE TABLE users (
                        deleted_at TIMESTAMP,
 
                        CONSTRAINT uk_users_oauth UNIQUE (oauth_provider, oauth_id),
-                       CONSTRAINT chk_users_language_code CHECK (language_code IN ('KO', 'EN', 'NE', 'KM', 'VI'))
+                       CONSTRAINT chk_users_language_code CHECK (language_code IN ('KR', 'US', 'KH', 'VN', 'NP'))
 );
 
 CREATE TABLE refresh_tokens (
@@ -85,7 +85,7 @@ CREATE TABLE chat_messages (
                                    CHECK (status IN ('PROCESSING', 'COMPLETED', 'FAILED')),
 
                                CONSTRAINT chk_chat_messages_language_code
-                                   CHECK (language_code IS NULL OR language_code IN ('KO', 'EN', 'NE', 'KM', 'VI'))
+                                   CHECK (language_code IS NULL OR language_code IN ('KR', 'US', 'KH', 'VN', 'NP'))
 );
 
 CREATE TABLE message_sources (

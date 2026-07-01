@@ -1,6 +1,8 @@
 package com.safing.backend.auth.dto.request;
 
+import com.safing.backend.common.enumtype.CountryCode;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -14,4 +16,7 @@ public class GoogleLoginRequest {
      */
     @NotBlank(message = "Google ID Token은 필수입니다.") // 빈 문자열, 공백 문자열, null 전부 금지
     private String idToken;
+
+    @NotNull(message = "언어 코드는 필수입니다.")
+    private CountryCode countryCode;
 }

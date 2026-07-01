@@ -3,13 +3,17 @@ package com.safing.backend.auth.jwt;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Date;
+import java.util.UUID;
 
 @Component
-@lombok.extern.slf4j.Slf4j
+@Slf4j
 public class JwtTokenProvider {
 
     // application.yml의 jwt 설정값을 바인딩한 객체
@@ -34,7 +38,7 @@ public class JwtTokenProvider {
      * - 만료 기간이 짧음
      */
     public String generateAccessToken(Long userId){
-        return generateToken(userId, jwtProperties.getAccessTokenExpiration());
+        return generateToken(userId, jwtProperties.getAccessTokenExpiration().toMillis());
     }
 
     /**
@@ -43,7 +47,7 @@ public class JwtTokenProvider {
      * - 만료 기간이 Access Token보다 길다
      */
     public String generateRefreshToken(Long userId){
-        return generateToken(userId, jwtProperties.getRefreshTokenExpiration());
+        return generateToken(userId, jwtProperties.getRefreshTokenExpiration().toMillis());
     }
 
 
@@ -58,6 +62,9 @@ public class JwtTokenProvider {
         Date expiration = new Date(now.getTime() + expirationMillis); // 현재시간 + 만료기간
 
         return Jwts.builder()
+                // jti(JWT ID): 토큰마다 고유한 식별자를 부여해 동일 사용자/동일 시간 발급 시에도 토큰이 중복되지 않게 함
+                .id(UUID.randomUUID().toString())
+
                 // sub(subject) : 토큰의 주체 (사용자 ID)
                 .subject(String.valueOf(userId))
 
@@ -112,7 +119,7 @@ public class JwtTokenProvider {
      * 토큰의 Claims(payload)를 추출하는 메서드
      * - subject, issuedAt, expiration같은 정보를 읽을 때 사용
      */
-    public Claims getClaims(String token){
+    private Claims getClaims(String token){
         return Jwts.parser()
                 .verifyWith(secretKey)
                 .build()
@@ -124,8 +131,19 @@ public class JwtTokenProvider {
      * 토큰에서 사용자 ID 추출
      * - JWT subject에 저장해둔 userId를 Long으로 변환해 반환
      */
-    public long getUserId(String token){
+    public Long getUserId(String token){
         Claims claims = getClaims(token);
         return Long.valueOf(claims.getSubject());
+    }
+
+    /**
+     * 토큰의 만료 시간을 반환
+     */
+    public LocalDateTime extractExpiration(String token){
+        Date expiration = getClaims(token).getExpiration();
+
+        return expiration.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDateTime();
     }
 }
