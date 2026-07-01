@@ -1,0 +1,16 @@
+{
+    "translation": {
+      "chat": {
+        "welcome_message": "សួស្តី!",
+        "start_message": "សូមសួរបានគ្រប់ពេលនូវរាល់សំណួរអំពីសុវត្ថិភាព ឬហានិភ័យនានាក្នុងអំឡុងពេលបំពេញការងារ។",
+        "input_placeholder": "សូមបញ្ចូលសំណួររបស់អ្នក។",
+        "drawer_new_chat": "ការសន្ទនាថ្មី",
+        "drawer_language": "ប្តូរភាសា",
+        "drawer_chat_history": "ប្រវត្តិសន្ទនា"
+      },
+      "language": {
+        "select_language": "សូមជ្រើសរើសភាសា។",
+        "changed": "ភាសាត្រូវបានផ្លាស់ប្តូរ។"
+      }
+    }
+  }

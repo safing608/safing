@@ -1,1 +1,20 @@
-pr template 설정 테스트
+
+# SAFING
+
+제조업  현장에서  근무하는  외국인  근로자가  한국어로  된  작업  지시,  안전  수칙,  위험  상황  대응  방법을  충분히 이해하지 못해 발생할 수 있는 산업재해 위험을 줄이기 위한 AI 기반 산업안전 지원 서비스
+
+---
+
+## 시작하기 (Get started)
+
+1. 의존성 설치 (Install dependencies)
+
+   ```bash
+   npm install
+   ```
+
+2. app 실행 (Start the app)
+
+   ```bash
+   npx expo start
+   ```

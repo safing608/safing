@@ -1,0 +1,17 @@
+{
+    "translation": {
+      "chat": {
+        "welcome_message": "Hello!",
+        "start_message": "Feel free to ask anytime about safety or hazards while you're at work.",
+        "input_placeholder": "Please enter your question.",
+        "drawer_new_chat": "New Chat",
+        "drawer_language": "Change Language",
+        "drawer_chat_history": "Chat History"
+      },
+      "language": {
+        "select_language": "Please select a language.",
+        "changed": "Language has been changed."
+      }
+    }
+  }
+  
