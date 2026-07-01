@@ -7,6 +7,6 @@ jwt:
   access-token-expiration: PT30M
   refresh-token-expiration: P14D
 
-google:
-  oauth:
+oauth:
+  google:
     client-id: ${GOOGLE_CLIENT_ID}

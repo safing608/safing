@@ -1,5 +1,7 @@
 package com.safing.backend.config;
 
+import com.safing.backend.auth.security.JwtAuthenticationFilter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -7,10 +9,14 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration // Spring 설정 파일이라고 알려주는 어노테이션
 @EnableWebSecurity // Spring Security를 활성화하도록 준비 (인증, 인가, 보안필터, 로그인 등)
+@RequiredArgsConstructor
 public class SecurityConfig {
+
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     /**
      * Spring Security의 필터 체인을 설정하는 Bean
@@ -41,8 +47,12 @@ public class SecurityConfig {
                                 "/v3/api-docs/**"
                         ).permitAll()
 
-                        .anyRequest().permitAll()
+                        // 그 외 모든 API는 인증 요구
+                        .anyRequest().authenticated()
                 )
+
+                // UsernamePasswordAuthenticationFilter 전에 커스텀 JWT 필터 배치
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build(); // 설정완료 -> SecurityFilterChain 생성
     }
 }

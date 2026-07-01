@@ -7,6 +7,7 @@ import com.safing.backend.auth.entity.RefreshToken;
 import com.safing.backend.auth.google.GoogleTokenVerifier;
 import com.safing.backend.auth.jwt.JwtTokenProvider;
 import com.safing.backend.auth.repository.RefreshTokenRepository;
+import com.safing.backend.common.enumtype.CountryCode;
 import com.safing.backend.common.enumtype.OAuthProvider;
 import com.safing.backend.user.entity.User;
 import com.safing.backend.user.repository.UserRepository;
@@ -41,11 +42,11 @@ public class AuthService {
      * - SAFING 자체 Access Token / Refresh Token 발급
      * - Refresh Token을 DB에 저장
      */
-    public TokenResponse googleLogin(GoogleLoginRequest googleLoginRequest) {
+    public TokenResponse googleLogin(String idToken, CountryCode countryCode) {
         // 1. Google ID Token 검증
         // 프론트가 보내준 Google ID Token을 검증해 사용자 정보를 담은 payload 반환
         GoogleIdToken.Payload payload =
-                googleTokenVerifier.verify(googleLoginRequest.getIdToken());
+                googleTokenVerifier.verify(idToken);
 
         // 2. Google 사용자 정보 추출
         String oauthId = payload.getSubject();
@@ -58,7 +59,7 @@ public class AuthService {
                         User.createGoogleUser(
                                 oauthId,
                                 username,
-                                googleLoginRequest.getCountryCode()
+                                countryCode
                         )
                 ));
 

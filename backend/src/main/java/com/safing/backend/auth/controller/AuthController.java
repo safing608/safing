@@ -28,7 +28,10 @@ public class AuthController {
     public ResponseEntity<ApiResponse<TokenResponse>> googleLogin(
             @Valid @RequestBody GoogleLoginRequest request
     ) {
-        TokenResponse response = authService.googleLogin(request);
+        TokenResponse response = authService.googleLogin(
+                request.getIdToken(),
+                request.getCountryCode()
+        );
 
         return ResponseEntity.ok(
                 ApiResponse.success("로그인에 성공했습니다.", response)
