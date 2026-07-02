@@ -1,11 +1,13 @@
 package com.safing.backend.auth.controller;
 
 import com.safing.backend.auth.dto.request.GoogleLoginRequest;
+import com.safing.backend.auth.dto.request.LogoutRequest;
 import com.safing.backend.auth.dto.response.TokenResponse;
 import com.safing.backend.auth.service.AuthService;
 import com.safing.backend.common.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,12 +31,29 @@ public class AuthController {
             @Valid @RequestBody GoogleLoginRequest request
     ) {
         TokenResponse response = authService.googleLogin(
-                request.getIdToken(),
-                request.getCountryCode()
+                request.idToken(),
+                request.countryCode()
         );
 
         return ResponseEntity.ok(
                 ApiResponse.success("로그인에 성공했습니다.", response)
+        );
+    }
+
+    /**
+     * 로그아웃 API
+     */
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<Void>> logout(
+        Authentication authentication,
+        @Valid @RequestBody LogoutRequest request
+    ){
+        Long userId = Long.valueOf(authentication.getName());
+
+        authService.logout(userId, request.refreshToken());
+
+        return ResponseEntity.ok(
+                ApiResponse.success("로그아웃에 성공했습니다.",null)
         );
     }
 }

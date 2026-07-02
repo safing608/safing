@@ -9,6 +9,7 @@ import com.safing.backend.auth.jwt.JwtTokenProvider;
 import com.safing.backend.auth.repository.RefreshTokenRepository;
 import com.safing.backend.common.enumtype.CountryCode;
 import com.safing.backend.common.enumtype.OAuthProvider;
+import com.safing.backend.common.exception.InvalidRefreshTokenException;
 import com.safing.backend.user.entity.User;
 import com.safing.backend.user.repository.UserRepository;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.LocalDateTime;
 import java.util.HexFormat;
 
 @Service
@@ -96,5 +98,42 @@ public class AuthService {
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException("SHA-256 알고리즘을 사용할 수 없습니다.", e);
         }
+    }
+
+    /**
+     * 로그아웃
+     */
+    @Transactional
+    public void logout(Long userId, String refreshToken){
+
+        // 1. DB에 저장된 해시값과 비교하기 위해 클라이언트가 보낸 Refresh Token을 해시
+        String tokenHash = hashToken(refreshToken);
+
+        // 2. 해시값으로 DB에 저장된 Refresh Token 조회
+        // 없을 시 유효하지 않은 Refresh Token으로 처리
+        RefreshToken savedToken = refreshTokenRepository.findByTokenHash(tokenHash)
+                .orElseThrow(InvalidRefreshTokenException::new);
+
+        // 3. Authorization 헤더의 Access Token에서 꺼낸 userId와 Refresh Token의 소유자 userId가 같은지 확인
+        // 다르다면 다른 사용자의 Refresh Token으로 로그아웃하려는 상황이므로 차단.
+        if (!savedToken.getUser().getUserId().equals(userId)) {
+            throw new InvalidRefreshTokenException();
+        }
+
+        // 4. Refresh Token이 이미 만료된 경우면 성공 처리
+        // 만료된 Refresh Token은 재발급에 사용할 수 없기 때문에
+        // 클라이언트 입장에서 로그아웃 성공으로 처리하는 편이 자연스러움
+        if (savedToken.getExpiredAt().isBefore(LocalDateTime.now())){
+            return;
+        }
+
+        // 5. 이미 로그아웃 처리된 토큰이면 다시 revokedAt을 갱신하지 않아도 됨
+        if (savedToken.getRevokedAt() != null){
+            return;
+        }
+
+        // 6. 정상 Refresh Token이면 revokedAt을 현재 시간으로 채워 무효화
+        // @Transactional 안에서 엔티티 값을 변경하면 JPA 변경 감지로 UPDATE가 반영된다
+        savedToken.revoke();
     }
 }

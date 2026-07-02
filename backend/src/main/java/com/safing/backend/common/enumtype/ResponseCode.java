@@ -3,5 +3,8 @@ package com.safing.backend.common.enumtype;
 public enum ResponseCode {
     REQUEST_SUCCESS,
     INVALID_ID_TOKEN,
-    INTERNAL_SERVER_ERROR
+    INTERNAL_SERVER_ERROR,
+    INVALID_REFRESH_TOKEN,
+    INVALID_ACCESS_TOKEN
+
 }

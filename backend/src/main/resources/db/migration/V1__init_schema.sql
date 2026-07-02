@@ -3,14 +3,14 @@ CREATE TABLE users (
                        oauth_provider VARCHAR(20) NOT NULL,
                        oauth_id VARCHAR(255) NOT NULL,
                        username VARCHAR(100) NOT NULL,
-                       language_code VARCHAR(10) NOT NULL,
+                       country_code VARCHAR(10) NOT NULL,
                        is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
                        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                        updated_at TIMESTAMP,
                        deleted_at TIMESTAMP,
 
                        CONSTRAINT uk_users_oauth UNIQUE (oauth_provider, oauth_id),
-                       CONSTRAINT chk_users_language_code CHECK (language_code IN ('KR', 'US', 'KH', 'VN', 'NP'))
+                       CONSTRAINT chk_users_country_code CHECK (country_code IN ('KR', 'US', 'KH', 'VN', 'NP'))
 );
 
 CREATE TABLE refresh_tokens (
@@ -61,7 +61,7 @@ CREATE TABLE chat_messages (
                                parent_message_id BIGINT,
                                role VARCHAR(20) NOT NULL,
                                content TEXT NOT NULL,
-                               language_code VARCHAR(10),
+                               country_code VARCHAR(10),
                                status VARCHAR(20) NOT NULL,
                                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                                updated_at TIMESTAMP,
@@ -84,8 +84,8 @@ CREATE TABLE chat_messages (
                                CONSTRAINT chk_chat_messages_status
                                    CHECK (status IN ('PROCESSING', 'COMPLETED', 'FAILED')),
 
-                               CONSTRAINT chk_chat_messages_language_code
-                                   CHECK (language_code IS NULL OR language_code IN ('KR', 'US', 'KH', 'VN', 'NP'))
+                               CONSTRAINT chk_chat_messages_country_code
+                                   CHECK (country_code IS NULL OR country_code IN ('KR', 'US', 'KH', 'VN', 'NP'))
 );
 
 CREATE TABLE message_sources (

@@ -32,4 +32,14 @@ public class GlobalExceptionHandler {
                         "서버 내부 오류가 발생했습니다."
                 ));
     }
+
+    @ExceptionHandler(InvalidRefreshTokenException.class)
+    public ResponseEntity<ApiResponse<Void>> handleInvalidRefreshTokenException(InvalidRefreshTokenException e) {
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(ApiResponse.error(
+                        ResponseCode.INVALID_REFRESH_TOKEN,
+                        e.getMessage()
+                ));
+    }
 }
