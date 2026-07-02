@@ -1,7 +1,6 @@
 import LanguageCard from "@/components/common/LanguageCard";
 import FontText from "@/components/common/FontText";
 import { COLORS } from "@/constants/colors";
-import { COUNTRY_CODE_TO_LANGUAGE, LANGUAGE_OPTIONS } from "@/constants/i18n";
 import { FONT_SIZES, SPACING } from "@/constants/sizes";
 import { useUserStore } from "@/stores/userStore";
 import React, { useCallback, useEffect, useRef } from "react";
@@ -10,6 +9,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import Toast from "react-native-toast-message";
 import { t as i18nT } from "i18next";
+import { CountryCode, LANGUAGE_OPTIONS } from "@/constants/i18n";
 
 const ANIMATION_DURATION = 260;
 
@@ -61,8 +61,8 @@ function LanguageSheet({ visible, onClose }: LanguageSheetProps) {
 
   // 언어 선택 시 언어 설정
   const handleSelect = useCallback(
-    (countryCode: keyof typeof COUNTRY_CODE_TO_LANGUAGE) => {
-      setLanguage(COUNTRY_CODE_TO_LANGUAGE[countryCode]);
+    (countryCode: CountryCode) => {
+      setLanguage(countryCode);
       onClose();
       setTimeout(() => {
         Toast.show({
@@ -114,10 +114,7 @@ function LanguageSheet({ visible, onClose }: LanguageSheetProps) {
               key={countryCode}
               countryCode={countryCode}
               languageName={languageName}
-              isSelected={
-                hasSetLanguage &&
-                language === COUNTRY_CODE_TO_LANGUAGE[countryCode]
-              }
+              isSelected={hasSetLanguage && language === countryCode}
               onPress={() => handleSelect(countryCode)}
             />
           ))}

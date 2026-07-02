@@ -2,7 +2,7 @@ import Button from "@/components/common/Button";
 import FontText from "@/components/common/FontText";
 import LanguageCard from "@/components/common/LanguageCard";
 import { COLORS } from "@/constants/colors";
-import { COUNTRY_CODE_TO_LANGUAGE, LANGUAGE_OPTIONS } from "@/constants/i18n";
+import { CountryCode, LANGUAGE_OPTIONS } from "@/constants/i18n";
 import { FONT_SIZES, SPACING } from "@/constants/sizes";
 import { useUserStore } from "@/stores/userStore";
 import { dev } from "@/utils/dev";
@@ -25,9 +25,9 @@ function LanguageScreen() {
 
   // 언어 선택 시 언어 설정
   const handleSelect = useCallback(
-    (countryCode: keyof typeof COUNTRY_CODE_TO_LANGUAGE) => {
+    (countryCode: CountryCode) => {
       dev.log("handleSelect", countryCode);
-      setLanguage(COUNTRY_CODE_TO_LANGUAGE[countryCode]);
+      setLanguage(countryCode);
     },
     [setLanguage],
   );
@@ -59,10 +59,7 @@ function LanguageScreen() {
               key={countryCode}
               countryCode={countryCode}
               languageName={languageName}
-              isSelected={
-                hasSetLanguage &&
-                language === COUNTRY_CODE_TO_LANGUAGE[countryCode]
-              }
+              isSelected={hasSetLanguage && language === countryCode}
               onPress={() => handleSelect(countryCode)}
             />
           ))}
