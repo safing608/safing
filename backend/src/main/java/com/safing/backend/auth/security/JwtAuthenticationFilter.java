@@ -41,7 +41,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String accessToken = authorizationHeader.substring(7);
 
 
-        if (jwtTokenProvider.validateToken(accessToken)) {
+        if (jwtTokenProvider.validateToken(accessToken) && jwtTokenProvider.isAccessToken(accessToken)) {
             // 4. 토큰 검증 후  userId 꺼내기
             Long userId = jwtTokenProvider.getUserId(accessToken);
 

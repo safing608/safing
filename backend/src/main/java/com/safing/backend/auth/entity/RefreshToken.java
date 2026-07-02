@@ -36,14 +36,17 @@ public class RefreshToken {
     @Column(name = "revoked_at")
     private LocalDateTime revokedAt;
 
-    // 로그아웃
+    /**
+     * Refresh Token 무효화
+     * - 로그아웃 또는 재발급 성공 시 기존 토큰을 더 이상 사용할 수 없게 함
+     */
     public void revoke() {
         this.revokedAt = LocalDateTime.now();
     }
 
     // 사용 가능한 토큰인지 검증 (폐기되지 않았고, 만료 시간도 지나지 않음)
     public boolean isValid() {
-        return revokedAt == null && !expiredAt.isBefore(LocalDateTime.now());
+        return revokedAt == null && expiredAt.isAfter(LocalDateTime.now());
     }
 
     // 정적 팩토리 메서드

@@ -2,6 +2,8 @@ package com.safing.backend.auth.service;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.safing.backend.auth.dto.request.GoogleLoginRequest;
+import com.safing.backend.auth.dto.request.ReissueRequest;
+import com.safing.backend.auth.dto.response.ReissueResponse;
 import com.safing.backend.auth.dto.response.TokenResponse;
 import com.safing.backend.auth.entity.RefreshToken;
 import com.safing.backend.auth.google.GoogleTokenVerifier;
@@ -135,5 +137,70 @@ public class AuthService {
         // 6. 정상 Refresh Token이면 revokedAt을 현재 시간으로 채워 무효화
         // @Transactional 안에서 엔티티 값을 변경하면 JPA 변경 감지로 UPDATE가 반영된다
         savedToken.revoke();
+    }
+
+    /**
+     * 토큰 재발급
+     */
+    @Transactional
+    public ReissueResponse reissue(String refreshToken){
+
+        // 1. JWT 자체 검증
+        if (!jwtTokenProvider.validateToken(refreshToken)) {
+            throw new InvalidRefreshTokenException();
+        }
+
+        // 2. Access Token을 Refresh Token 재발급에 사용하는 것을 방지
+        if (!jwtTokenProvider.isRefreshToken(refreshToken)) {
+            throw new InvalidRefreshTokenException();
+        }
+
+        // 3. Refresh Token 원문을 해시로 변환
+        String tokenHash = hashToken(refreshToken);
+
+        // 4. DB에 저장된 Refresh Token인지 확인
+        RefreshToken savedRefreshToken = refreshTokenRepository.findByTokenHash(tokenHash)
+                .orElseThrow(InvalidRefreshTokenException::new);
+
+        // 5. 이미 로그아웃 또는 재발급으로 무효화된 토큰인지 확인
+        if (!savedRefreshToken.isValid()){
+            throw new InvalidRefreshTokenException();
+        }
+
+        // 6. 토큰에 들어있는 userId 추출
+        Long userId = jwtTokenProvider.getUserId(refreshToken);
+
+        // 7. 사용자 조회
+        User user = userRepository.findById(userId).orElseThrow(InvalidRefreshTokenException::new);
+
+        // 8. DB에 저장된 토큰의 사용자 == JWT subject의 사용자 확인
+        if(!savedRefreshToken.getUser().getUserId().equals(userId)){
+            throw new InvalidRefreshTokenException();
+        }
+
+        // 9. 기존 Refresh Token 무효화
+        // - 한 번 재발급에 사용한 Refresh Token은 다시 사용할 수 없게 함
+        savedRefreshToken.revoke();
+
+        // 10. 새 Access Token 발급
+        String newAccessToken = jwtTokenProvider.generateAccessToken(user.getUserId());
+
+        // 11. 새 Refresh Token 발급
+        String newRefreshToken = jwtTokenProvider.generateRefreshToken(user.getUserId());
+
+        // 12. 새 Refresh Token 해시 생성
+        String newRefreshTokenHash = hashToken(newRefreshToken);
+
+        // 13. 새 Refresh Token DB 저장
+        refreshTokenRepository.save(
+                RefreshToken.create(
+                        user,
+                        newRefreshTokenHash,
+                        jwtTokenProvider.extractExpiration(newRefreshToken)
+                )
+        );
+
+        // 14. 새 토큰 응답
+        return new ReissueResponse(newAccessToken, newRefreshToken);
     }
 }

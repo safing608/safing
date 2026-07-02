@@ -15,6 +15,9 @@ import java.util.UUID;
 @Component
 @Slf4j
 public class JwtTokenProvider {
+    private static final String TOKEN_TYPE_CLAIM = "tokenType";
+    private static final String ACCESS_TOKEN = "ACCESS";
+    private static final String REFRESH_TOKEN = "REFRESH";
 
     // application.yml의 jwt 설정값을 바인딩한 객체
     private final JwtProperties jwtProperties;
@@ -38,7 +41,7 @@ public class JwtTokenProvider {
      * - 만료 기간이 짧음
      */
     public String generateAccessToken(Long userId){
-        return generateToken(userId, jwtProperties.getAccessTokenExpiration().toMillis());
+        return generateToken(userId, jwtProperties.getAccessTokenExpiration().toMillis(), ACCESS_TOKEN);
     }
 
     /**
@@ -47,7 +50,7 @@ public class JwtTokenProvider {
      * - 만료 기간이 Access Token보다 길다
      */
     public String generateRefreshToken(Long userId){
-        return generateToken(userId, jwtProperties.getRefreshTokenExpiration().toMillis());
+        return generateToken(userId, jwtProperties.getRefreshTokenExpiration().toMillis(), REFRESH_TOKEN);
     }
 
 
@@ -56,8 +59,9 @@ public class JwtTokenProvider {
      *
      * @param userId 토큰의 subject로 저장할 사용자 ID
      * @param expirationMillis 토큰 만료 시간(ms)
+     * @param tokenType ACCESS 또는 REFRESH
      */
-    private String generateToken(Long userId, long expirationMillis){
+    private String generateToken(Long userId, long expirationMillis, String tokenType){
         Date now = new Date();
         Date expiration = new Date(now.getTime() + expirationMillis); // 현재시간 + 만료기간
 
@@ -67,6 +71,9 @@ public class JwtTokenProvider {
 
                 // sub(subject) : 토큰의 주체 (사용자 ID)
                 .subject(String.valueOf(userId))
+
+                // Access Token인지 Refresh Token인지 구분하기 위한 claim
+                .claim(TOKEN_TYPE_CLAIM, tokenType)
 
                 // iat(issued at): 토큰 발급 시간
                 .issuedAt(now)
@@ -145,5 +152,38 @@ public class JwtTokenProvider {
         return expiration.toInstant()
                 .atZone(ZoneId.systemDefault())
                 .toLocalDateTime();
+    }
+
+    /**
+     * Refresh Token 여부 확인
+     * - tokenType claim이 REFRESH인지 확인
+     * - 재발급 API에서 Access Token이 들어오는 것을 막기 위해 사용
+     */
+    public boolean isRefreshToken(String token){
+        try{
+            Claims claims = getClaims(token);
+            String tokenType = claims.get(TOKEN_TYPE_CLAIM, String.class);
+
+            return REFRESH_TOKEN.equals(tokenType);
+        } catch (JwtException | IllegalArgumentException e){
+            log.warn("Refresh Token 타입 확인에 실패했습니다.", e);
+            return false;
+        }
+    }
+
+    /**
+     * Access Token 여부 확인
+     * - 인증 필터에서 Access Token만 인증 처리하기 위해 사용
+     */
+    public boolean isAccessToken(String token) {
+        try {
+            Claims claims = getClaims(token);
+            String tokenType = claims.get(TOKEN_TYPE_CLAIM, String.class);
+
+            return ACCESS_TOKEN.equals(tokenType);
+        } catch (JwtException | IllegalArgumentException e) {
+            log.warn("Access Token 타입 확인에 실패했습니다.", e);
+            return false;
+        }
     }
 }

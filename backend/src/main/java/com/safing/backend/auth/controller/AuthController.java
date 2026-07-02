@@ -2,6 +2,8 @@ package com.safing.backend.auth.controller;
 
 import com.safing.backend.auth.dto.request.GoogleLoginRequest;
 import com.safing.backend.auth.dto.request.LogoutRequest;
+import com.safing.backend.auth.dto.request.ReissueRequest;
+import com.safing.backend.auth.dto.response.ReissueResponse;
 import com.safing.backend.auth.dto.response.TokenResponse;
 import com.safing.backend.auth.service.AuthService;
 import com.safing.backend.common.dto.ApiResponse;
@@ -56,4 +58,21 @@ public class AuthController {
                 ApiResponse.success("로그아웃에 성공했습니다.",null)
         );
     }
+
+    /**
+     * 토큰 재발급 API
+     */
+    @PostMapping("/reissue")
+    public ResponseEntity<ApiResponse<ReissueResponse>> reissue(
+            @Valid @RequestBody ReissueRequest request
+    ){
+        ReissueResponse response = authService.reissue(request.refreshToken());
+
+        return ResponseEntity.ok(
+                ApiResponse.success("토큰 재발급에 성공했습니다.",
+                response
+                )
+        );
+    }
+
 }
