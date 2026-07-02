@@ -33,7 +33,7 @@ public class User {
     private String username;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "language_code", nullable = false)
+    @Column(name = "country_code", nullable = false)
     private CountryCode countryCode;
 
     @Column(name = "is_deleted", nullable = false)
@@ -55,12 +55,12 @@ public class User {
      * Google OAuth를 통해 최초 로그인한 사용자를 생성한다.
      * userId와 생성/수정 시간은 JPA(Hibernate)가 자동으로 설정한다.
      */
-    public static User createGoogleUser(String oauthId, String username, CountryCode languageCode) {
+    public static User createGoogleUser(String oauthId, String username, CountryCode countryCode) {
         return User.builder()
                 .oauthProvider(OAuthProvider.GOOGLE)
                 .oauthId(oauthId)
                 .username(username)
-                .countryCode(languageCode)
+                .countryCode(countryCode)
                 .build();
     }
 }
