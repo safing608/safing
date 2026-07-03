@@ -63,4 +63,11 @@ public class User {
                 .countryCode(countryCode)
                 .build();
     }
+
+    /**
+     * 사용자의 기본 국가 코드를 변경한다.
+     */
+    public void updateCountryCode(CountryCode countryCode) {
+        this.countryCode = countryCode;
+    }
 }
