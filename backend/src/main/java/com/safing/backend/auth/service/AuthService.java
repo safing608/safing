@@ -1,8 +1,6 @@
 package com.safing.backend.auth.service;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
-import com.safing.backend.auth.dto.request.GoogleLoginRequest;
-import com.safing.backend.auth.dto.request.ReissueRequest;
 import com.safing.backend.auth.dto.response.ReissueResponse;
 import com.safing.backend.auth.dto.response.TokenResponse;
 import com.safing.backend.auth.entity.RefreshToken;
@@ -11,7 +9,8 @@ import com.safing.backend.auth.jwt.JwtTokenProvider;
 import com.safing.backend.auth.repository.RefreshTokenRepository;
 import com.safing.backend.common.enumtype.CountryCode;
 import com.safing.backend.common.enumtype.OAuthProvider;
-import com.safing.backend.common.exception.InvalidRefreshTokenException;
+import com.safing.backend.common.enumtype.ResponseCode;
+import com.safing.backend.common.exception.CustomException;
 import com.safing.backend.user.entity.User;
 import com.safing.backend.user.repository.UserRepository;
 import org.springframework.transaction.annotation.Transactional;
@@ -114,12 +113,12 @@ public class AuthService {
         // 2. 해시값으로 DB에 저장된 Refresh Token 조회
         // 없을 시 유효하지 않은 Refresh Token으로 처리
         RefreshToken savedToken = refreshTokenRepository.findByTokenHash(tokenHash)
-                .orElseThrow(InvalidRefreshTokenException::new);
+                .orElseThrow(() -> new CustomException(ResponseCode.INVALID_REFRESH_TOKEN));
 
         // 3. Authorization 헤더의 Access Token에서 꺼낸 userId와 Refresh Token의 소유자 userId가 같은지 확인
         // 다르다면 다른 사용자의 Refresh Token으로 로그아웃하려는 상황이므로 차단.
         if (!savedToken.getUser().getUserId().equals(userId)) {
-            throw new InvalidRefreshTokenException();
+            throw new CustomException(ResponseCode.INVALID_REFRESH_TOKEN);
         }
 
         // 4. Refresh Token이 이미 만료된 경우면 성공 처리
@@ -147,12 +146,12 @@ public class AuthService {
 
         // 1. JWT 자체 검증
         if (!jwtTokenProvider.validateToken(refreshToken)) {
-            throw new InvalidRefreshTokenException();
+            throw new CustomException(ResponseCode.INVALID_REFRESH_TOKEN);
         }
 
         // 2. Access Token을 Refresh Token 재발급에 사용하는 것을 방지
         if (!jwtTokenProvider.isRefreshToken(refreshToken)) {
-            throw new InvalidRefreshTokenException();
+            throw new CustomException(ResponseCode.INVALID_REFRESH_TOKEN);
         }
 
         // 3. Refresh Token 원문을 해시로 변환
@@ -160,22 +159,22 @@ public class AuthService {
 
         // 4. DB에 저장된 Refresh Token인지 확인
         RefreshToken savedRefreshToken = refreshTokenRepository.findByTokenHash(tokenHash)
-                .orElseThrow(InvalidRefreshTokenException::new);
+                .orElseThrow(() -> new CustomException(ResponseCode.INVALID_REFRESH_TOKEN));
 
         // 5. 이미 로그아웃 또는 재발급으로 무효화된 토큰인지 확인
         if (!savedRefreshToken.isValid()){
-            throw new InvalidRefreshTokenException();
+            throw new CustomException(ResponseCode.INVALID_REFRESH_TOKEN);
         }
 
         // 6. 토큰에 들어있는 userId 추출
         Long userId = jwtTokenProvider.getUserId(refreshToken);
 
         // 7. 사용자 조회
-        User user = userRepository.findById(userId).orElseThrow(InvalidRefreshTokenException::new);
+        User user = userRepository.findById(userId).orElseThrow(() -> new CustomException(ResponseCode.INVALID_REFRESH_TOKEN));
 
         // 8. DB에 저장된 토큰의 사용자 == JWT subject의 사용자 확인
         if(!savedRefreshToken.getUser().getUserId().equals(userId)){
-            throw new InvalidRefreshTokenException();
+            throw new CustomException(ResponseCode.INVALID_REFRESH_TOKEN);
         }
 
         // 9. 기존 Refresh Token 무효화
