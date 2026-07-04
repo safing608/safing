@@ -49,7 +49,6 @@ public class ChatMessage {
     @Column(name = "status", nullable = false, length = 20)
     private ChatMessageStatus status;
 
-    @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -64,11 +63,16 @@ public class ChatMessage {
             String content
     ) {
         ChatMessage message = new ChatMessage();
+        LocalDateTime now = LocalDateTime.now();
+
         message.session = session;
         message.role = ChatMessageRole.USER;
         message.content = content;
         message.countryCode = null;
         message.status = ChatMessageStatus.COMPLETED;
+        message.createdAt = now;
+        message.updatedAt = now;
+
         return message;
     }
 
@@ -80,16 +84,21 @@ public class ChatMessage {
             ChatMessage parentMessage,
             CountryCode countryCode
     ) {
-        if (parentMessage.getRole() != ChatMessageRole.USER) {
+        if (parentMessage == null || parentMessage.getRole() != ChatMessageRole.USER) {
             throw new IllegalArgumentException("ASSISTANT 메시지의 부모 메시지는 USER 메시지여야 합니다.");
         }
         ChatMessage message = new ChatMessage();
+        LocalDateTime now = LocalDateTime.now();
+
         message.session = session;
         message.parentMessage = parentMessage;
         message.role = ChatMessageRole.ASSISTANT;
         message.content = "";
         message.status = ChatMessageStatus.PROCESSING;
         message.countryCode = countryCode;
+        message.createdAt = now;
+        message.updatedAt = now;
+
         return message;
     }
 

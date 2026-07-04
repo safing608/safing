@@ -40,7 +40,7 @@ public class ChatSession {
     private LocalDateTime updatedAt;
 
     /**
-     * 새 대화방 생성
+     * 새 대화방 객체 생성
      */
     public static ChatSession create(User user) {
         ChatSession chatSession = new ChatSession();
