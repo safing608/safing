@@ -43,6 +43,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/auth/google", // Google 로그인/회원가입
                                 "/api/auth/reissue", // 토큰 재발급
+                                "/api/dev/**", // 개발용
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**"
                         ).permitAll()
