@@ -62,6 +62,14 @@ public class ChatSession {
     }
 
     /**
+     * 대화방 업데이트여부 update
+     */
+    public void updateUpdatedAt(){
+        this.updatedAt = LocalDateTime.now();
+    }
+
+
+    /**
      * 대화방 삭제 처리
      */
     public void softDelete() {
