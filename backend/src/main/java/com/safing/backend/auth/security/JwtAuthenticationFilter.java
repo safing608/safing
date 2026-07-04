@@ -48,7 +48,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // 5. SecurityContext에 인증 정보 넣기
             Authentication authentication =
                     new UsernamePasswordAuthenticationToken(
-                            String.valueOf(userId), // principal: 인증된 사용자 정보
+                            new AuthUser(userId), // principal: 인증된 사용자 정보
                             null, // credentials: 비밀번호 같은 인증 수단 (JWT는 null)
                             Collections.emptyList() // authorities: 권한 목록
                     );
