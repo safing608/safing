@@ -12,6 +12,7 @@ import { useUserStore } from "@/stores/userStore";
 import { dev } from "@/utils/dev";
 import Toast from "react-native-toast-message";
 import toastConfig from "@/components/common/ToastConfig";
+import { configureGoogleSignin } from "@/utils/googleSignin";
 
 // 저장된 언어 확인하고 i18n 초기화
 const initializeI18n = (() => {
@@ -58,7 +59,10 @@ const initializeI18n = (() => {
 })();
 
 // 앱 시작 시 i18n 초기화
-initializeI18n().catch(console.error);
+initializeI18n().catch(dev.error);
+
+// GoogleSignin 1회 초기화
+configureGoogleSignin();
 
 export const unstable_settings = {
   initialRouteName: "index",
