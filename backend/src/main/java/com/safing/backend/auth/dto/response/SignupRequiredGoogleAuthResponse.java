@@ -5,7 +5,13 @@ public record SignupRequiredGoogleAuthResponse()
 
     @Override
     public GoogleAuthStatus status() {
+
         return GoogleAuthStatus.SIGNUP_REQUIRED;
+    }
+
+    @Override
+    public String message() {
+        return "회원가입이 필요합니다.";
     }
 
     public static SignupRequiredGoogleAuthResponse signupRequired() {

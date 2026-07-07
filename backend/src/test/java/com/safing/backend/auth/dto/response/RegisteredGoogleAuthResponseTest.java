@@ -18,4 +18,16 @@ class RegisteredGoogleAuthResponseTest {
         System.out.println(json);
         assertThat(json).contains("\"status\":\"REGISTERED\"");
     }
+
+    @Test
+    void status는_포함되고_message는_제외되어야_한다() throws Exception {
+        RegisteredGoogleAuthResponse response =
+                RegisteredGoogleAuthResponse.registered(1L, "access-token", "refresh-token");
+
+        String json = new ObjectMapper().writeValueAsString(response);
+
+        System.out.println(json);
+        assertThat(json).contains("\"status\":\"REGISTERED\"");
+        assertThat(json).doesNotContain("\"message\"");
+    }
 }

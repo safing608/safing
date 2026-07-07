@@ -1,7 +1,5 @@
 package com.safing.backend.auth.dto.response;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 public record RegisteredGoogleAuthResponse(
     Long userId,
     String accessToken,
@@ -13,6 +11,12 @@ public record RegisteredGoogleAuthResponse(
     public GoogleAuthStatus status() {
 
         return GoogleAuthStatus.REGISTERED;
+    }
+
+    @Override
+    public String message() {
+
+        return "로그인에 성공했습니다.";
     }
 
     public static RegisteredGoogleAuthResponse registered(

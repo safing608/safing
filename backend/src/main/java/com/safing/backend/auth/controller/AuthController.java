@@ -1,8 +1,11 @@
 package com.safing.backend.auth.controller;
 
 import com.safing.backend.auth.dto.request.GoogleLoginRequest;
+import com.safing.backend.auth.dto.request.GoogleSignupRequest;
 import com.safing.backend.auth.dto.request.LogoutRequest;
 import com.safing.backend.auth.dto.request.ReissueRequest;
+import com.safing.backend.auth.dto.response.GoogleAuthResponse;
+import com.safing.backend.auth.dto.response.GoogleAuthStatus;
 import com.safing.backend.auth.dto.response.ReissueResponse;
 import com.safing.backend.auth.dto.response.TokenResponse;
 import com.safing.backend.auth.service.AuthService;
@@ -23,30 +26,33 @@ public class AuthController {
     private final AuthService authService;
 
     /**
-     * Google 로그인/회원가입 API
-     *
-     * @Valid: DTO에 붙어있는 @NotNull 같은 검증 어노테이션을 실행시키는 스위치 역할
-     * @RequestBody: HTTP 요청의 Body(JSON)을 Java 객체로 변환
-     */
-//    @PostMapping("/google")
-//    public ResponseEntity<ApiResponse<TokenResponse>> googleLogin(
-//            @Valid @RequestBody GoogleLoginRequest request
-//    ) {
-//        TokenResponse response = authService.googleLogin(
-//                request.idToken(),
-//                request.countryCode()
-//        );
-//
-//        return ResponseEntity.ok(
-//                ApiResponse.success("로그인에 성공했습니다.", response)
-//        );
-//    }
-
-    /**
      * Google 로그인/회원가입 진입 API
      */
-//    @PostMapping("/google")
-//    public ResponseEntity<ApiResponse<>>
+    @PostMapping("/google")
+    public ResponseEntity<ApiResponse<GoogleAuthResponse>> googleAuth(
+            @Valid @RequestBody GoogleLoginRequest request
+    ) {
+        GoogleAuthResponse response = authService.googleAuth(request.idToken());
+
+        return ResponseEntity.ok(
+                ApiResponse.success(response.message(), response)
+        );
+    }
+
+    /**
+     * Google 회원가입 완료 API
+     */
+    @PostMapping("/google/signup")
+    public ResponseEntity<ApiResponse<TokenResponse>> googleSignup(
+            @Valid @RequestBody GoogleSignupRequest request
+    ){
+        TokenResponse response = authService.googleSignup(request.idToken(), request.countryCode());
+
+        return ResponseEntity.ok(
+                ApiResponse.success("회원가입 및 로그인에 성공했습니다.", response)
+        );
+    }
+
 
     /**
      * 로그아웃 API
