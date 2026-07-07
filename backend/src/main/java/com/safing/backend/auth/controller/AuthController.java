@@ -28,19 +28,25 @@ public class AuthController {
      * @Valid: DTO에 붙어있는 @NotNull 같은 검증 어노테이션을 실행시키는 스위치 역할
      * @RequestBody: HTTP 요청의 Body(JSON)을 Java 객체로 변환
      */
-    @PostMapping("/google")
-    public ResponseEntity<ApiResponse<TokenResponse>> googleLogin(
-            @Valid @RequestBody GoogleLoginRequest request
-    ) {
-        TokenResponse response = authService.googleLogin(
-                request.idToken(),
-                request.countryCode()
-        );
+//    @PostMapping("/google")
+//    public ResponseEntity<ApiResponse<TokenResponse>> googleLogin(
+//            @Valid @RequestBody GoogleLoginRequest request
+//    ) {
+//        TokenResponse response = authService.googleLogin(
+//                request.idToken(),
+//                request.countryCode()
+//        );
+//
+//        return ResponseEntity.ok(
+//                ApiResponse.success("로그인에 성공했습니다.", response)
+//        );
+//    }
 
-        return ResponseEntity.ok(
-                ApiResponse.success("로그인에 성공했습니다.", response)
-        );
-    }
+    /**
+     * Google 로그인/회원가입 진입 API
+     */
+//    @PostMapping("/google")
+//    public ResponseEntity<ApiResponse<>>
 
     /**
      * 로그아웃 API
