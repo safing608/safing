@@ -18,6 +18,7 @@ public enum ResponseCode {
     INVALID_ACCESS_TOKEN(HttpStatus.UNAUTHORIZED, "INVALID_ACCESS_TOKEN", "유효하지 않은 액세스 토큰입니다."),
 
     UNSUPPORTED_COUNTRY_CODE(HttpStatus.BAD_REQUEST, "UNSUPPORTED_COUNTRY_CODE", "지원하지 않는 국가 코드입니다."),
+    DUPLICATE_SIGNUP_REQUEST(HttpStatus.CONFLICT, "DUPLICATE_SIGNUP_REQUEST", "이미 처리 중인 회원가입 요청입니다. 잠시 후 다시 시도해주세요."),
 
     SESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "SESSION_NOT_FOUND", "대화를 찾을 수 없습니다."),
 
@@ -26,4 +27,5 @@ public enum ResponseCode {
     private final HttpStatus httpStatus;
     private final String code;
     private final String message;
+
 }
