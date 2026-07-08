@@ -56,9 +56,11 @@ public class ChatSession {
     /**
      * 대화방 제목 update
      */
-    public void updateTitle(String title) {
-        this.title = title;
-        this.updatedAt = LocalDateTime.now();
+    public void updateTitleIfAbsent(String title) {
+        if (this.title == null || this.title.isBlank()) {
+            this.title = title;
+            this.updatedAt = LocalDateTime.now();
+        }
     }
 
     /**

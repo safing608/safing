@@ -21,7 +21,13 @@ public enum ResponseCode {
     DUPLICATE_SIGNUP_REQUEST(HttpStatus.CONFLICT, "DUPLICATE_SIGNUP_REQUEST", "이미 처리 중인 회원가입 요청입니다. 잠시 후 다시 시도해주세요."),
 
     SESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "SESSION_NOT_FOUND", "대화를 찾을 수 없습니다."),
+    MESSAGE_NOT_FOUND(HttpStatus.NOT_FOUND, "MESSAGE_NOT_FOUND", "메시지를 찾을 수 없습니다."),
+    RISK_TYPE_NOT_FOUND(HttpStatus.NOT_FOUND, "RISK_TYPE_NOT_FOUND", "위험 유형을 찾을 수 없습니다."),
 
+    INVALID_MESSAGE_STATUS(HttpStatus.BAD_REQUEST, "INVALID_MESSAGE_STATUS", "요청을 처리할 수 없는 메시지 상태입니다."),
+    ASSISTANT_MESSAGE_ALREADY_EXISTS(HttpStatus.CONFLICT, "ASSISTANT_MESSAGE_ALREADY_EXISTS", "이미 해당 질문에 대한 AI 답변 메시지가 존재합니다."),
+
+    AI_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "AI_SERVER_ERROR", "AI 답변 생성에 실패했습니다."),
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다.");
 
     private final HttpStatus httpStatus;

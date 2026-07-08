@@ -57,7 +57,7 @@ public class ChatController {
      * AI 답변 스트림 조회 API
      */
     @GetMapping(
-            value = "/api/chats/{sessionId}/messages/{messageId}/stream",
+            value = "/{sessionId}/messages/{messageId}/stream",
             produces = MediaType.TEXT_EVENT_STREAM_VALUE // API 응답 형식 명시 (SSE API니까 이벤트 스트림 응답)
     )
     public SseEmitter streamAnswer(
@@ -65,6 +65,7 @@ public class ChatController {
             @PathVariable Long sessionId,
             @PathVariable Long messageId
     ){
+
         return chatStreamService.streamAnswer(authUser.userId(), sessionId, messageId);
     }
 }

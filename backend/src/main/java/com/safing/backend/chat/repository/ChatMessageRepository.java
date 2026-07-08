@@ -31,4 +31,10 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
             ChatMessageRole role,
             ChatMessageStatus status
     );
+
+    // parentMessageId와 role로 조회 => 특정 USER 메시지에 대한 ASSISTANT 메시지가 이미 존재하는지 조회하기 위함
+    boolean existsByParentMessage_MessageIdAndRole(
+            Long parentMessageId,
+            ChatMessageRole role
+    );
 }

@@ -102,4 +102,23 @@ public class ChatMessage {
         return message;
     }
 
+    public void completeAssistantAnswer(RiskType riskType, String answer) {
+        if (this.status != ChatMessageStatus.PROCESSING) {
+            throw new IllegalStateException("PROCESSING 상태의 메시지만 완료 처리할 수 있습니다.");
+        }
+
+        this.riskType = riskType;
+        this.content = answer;
+        this.status = ChatMessageStatus.COMPLETED;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void failAssistantAnswer() {
+        if (this.status != ChatMessageStatus.PROCESSING) {
+            return;
+        }
+
+        this.status = ChatMessageStatus.FAILED;
+        this.updatedAt = LocalDateTime.now();
+    }
 }
