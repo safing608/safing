@@ -11,6 +11,22 @@
     "language": {
       "select_language": "언어를 선택해주세요.",
       "changed": "언어가 변경되었습니다."
+    },
+    "auth": {
+      "settings": "계정 설정",
+      "logout": "로그아웃",
+      "delete": "탈퇴",
+      "delete_account": "계정 삭제",
+      "delete_account_confirm": "계정을 삭제하시겠습니까?",
+      "login_failed": "로그인 중 오류가 발생했습니다.",
+      "logout_failed": "로그아웃 중 오류가 발생했습니다."
+    },
+    "common": {
+      "cancel": "취소",
+      "confirm": "확인"
+    },
+    "error": {
+      "common_error": "문제가 발생했습니다. 잠시 후 다시 시도해주세요."
     }
   }
 }

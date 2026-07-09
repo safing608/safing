@@ -1,3 +1,4 @@
+import { signup } from "@/api/auth";
 import Button from "@/components/common/Button";
 import FontText from "@/components/common/FontText";
 import LanguageCard from "@/components/common/LanguageCard";
@@ -5,21 +6,19 @@ import { COLORS } from "@/constants/colors";
 import { CountryCode, LANGUAGE_OPTIONS } from "@/constants/i18n";
 import { FONT_SIZES, SPACING } from "@/constants/sizes";
 import { useUserStore } from "@/stores/userStore";
-import { useAuthStore } from "@/stores/authStore";
-import axiosInstance from "@/api/axios";
 import { dev } from "@/utils/dev";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
 function LanguageScreen() {
+  const { t } = useTranslation();
   const language = useUserStore((state) => state.language);
-  const hasSetLanguage = useUserStore((state) => state.hasSetLanguage);
   const setLanguage = useUserStore((state) => state.setLanguage);
-  const { login } = useAuthStore();
-  
+
   // URL 파라미터로 받은 idToken과 returnTo 확인
   const { idToken, returnTo } = useLocalSearchParams<{
     idToken?: string;
@@ -29,56 +28,29 @@ function LanguageScreen() {
   // 백엔드에 토큰 전송
   const sendTokenToBackend = async (idToken: string, countryCode: string) => {
     try {
-      dev.log("백엔드에 토큰 전송:", { idToken: "***", countryCode });
-      
-      const response = await axiosInstance.post("/backend_api/google", {
+      await signup({
         idToken,
         countryCode,
       });
 
-      dev.log("백엔드 응답:", response.data);
-
-      // 응답에서 토큰 추출 (백엔드 응답 구조에 따라 조정 필요)
-      const { accessToken, refreshToken } = response.data;
-      
-      if (accessToken && refreshToken) {
-        // AuthStore에 로그인 정보 저장
-        login(accessToken, refreshToken, countryCode);
-        
-        Toast.show({
-          type: "success",
-          text1: "로그인 성공",
-        });
-
-        // 메인 앱으로 이동
-        router.replace("/(main)");
-      } else {
-        throw new Error("토큰을 받을 수 없습니다.");
-      }
+      router.replace("/chat");
     } catch (error) {
-      dev.error("백엔드 API 오류:", error);
+      dev.error("language 화면에서 API 오류:", error);
       Toast.show({
         type: "error",
-        text1: "서버 연결 중 오류가 발생했습니다.",
+        text1: t("error.common_error"),
       });
     }
   };
 
   // 언어 선택 확인
   const handleSubmit = async () => {
-    dev.log("선택된 언어:", language);
-    
-    // 언어 설정 완료 (hasSetLanguage를 true로 설정)
-    if (!hasSetLanguage) {
-      setLanguage(language);
-    }
-    
     // Google 로그인에서 온 경우 백엔드 API 호출
     if (idToken && returnTo === "login") {
       await sendTokenToBackend(idToken, language);
     } else {
       // 일반적인 언어 설정 후 메인 화면으로 이동
-      router.replace("/(main)/chat");
+      router.replace("/chat");
     }
   };
 
@@ -118,7 +90,7 @@ function LanguageScreen() {
               key={countryCode}
               countryCode={countryCode}
               languageName={languageName}
-              isSelected={hasSetLanguage && language === countryCode}
+              isSelected={language === countryCode}
               onPress={() => handleSelect(countryCode)}
             />
           ))}

@@ -8,9 +8,11 @@ import { CountryCode, DEFAULT_LANGUAGE } from "@/constants/i18n";
 
 interface UserState {
   language: CountryCode;
-  hasSetLanguage: boolean;
-  setLanguage: (language: CountryCode) => void;
   isHydrated: boolean;
+
+  // Actions
+  setLanguage: (language: CountryCode) => void;
+  resetUser: () => void;
   _setHydrated: (hydrated: boolean) => void;
 }
 
@@ -18,13 +20,19 @@ export const useUserStore = create<UserState>()(
   persist(
     (set) => ({
       language: DEFAULT_LANGUAGE, // 첫 사용자는 한국어
-      hasSetLanguage: false, // 첫 사용자는 언어 미설정 상태
       isHydrated: false,
       _setHydrated: (isHydrated) => set({ isHydrated }),
 
+      // 언어 설정
       setLanguage: (language) => {
-        set({ language, hasSetLanguage: true });
+        set({ language });
         changeLanguage(language).catch(dev.error);
+      },
+
+      // 사용자 정보 초기화 (로그아웃 시)
+      resetUser: () => {
+        set({ language: DEFAULT_LANGUAGE });
+        changeLanguage(DEFAULT_LANGUAGE).catch(dev.error);
       },
     }),
     {

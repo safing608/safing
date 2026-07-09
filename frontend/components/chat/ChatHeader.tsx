@@ -5,7 +5,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { Lucide } from "@react-native-vector-icons/lucide";
 import React from "react";
 import { StyleSheet, View } from "react-native";
-import FontText from "../FontText";
+import FontText from "../common/FontText";
 
 interface ChatHeaderProps {
   onMenuPress: () => void;

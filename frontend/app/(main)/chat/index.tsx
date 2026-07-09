@@ -1,4 +1,4 @@
-import ChatInput from "@/components/common/chat/ChatInput";
+import ChatInput from "@/components/chat/ChatInput";
 import FontText from "@/components/common/FontText";
 import { COLORS } from "@/constants/colors";
 import { FONT_SIZES, SPACING } from "@/constants/sizes";

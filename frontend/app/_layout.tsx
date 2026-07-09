@@ -9,6 +9,7 @@ import { initReactI18next } from "react-i18next";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { DEFAULT_LANGUAGE } from "@/constants/i18n";
 import { useUserStore } from "@/stores/userStore";
+import { useAuthStore } from "@/stores/authStore";
 import { dev } from "@/utils/dev";
 import Toast from "react-native-toast-message";
 import toastConfig from "@/components/common/ToastConfig";
@@ -28,10 +29,7 @@ const initializeI18n = (() => {
       if (stored) {
         const parsed = JSON.parse(stored);
         const userData = parsed.state;
-        // 이미 언어를 설정한 사용자는 저장된 언어 사용
-        if (userData?.hasSetLanguage && userData?.language) {
-          initialLanguage = userData.language;
-        }
+        initialLanguage = userData.language;
       }
     } catch {
       // AsyncStorage 오류 시 기본 언어 사용
@@ -63,6 +61,19 @@ initializeI18n().catch(dev.error);
 
 // GoogleSignin 1회 초기화
 configureGoogleSignin();
+
+// 토큰 복원
+const restoreAuthTokens = async () => {
+  try {
+    const { restoreTokens } = useAuthStore.getState();
+    await restoreTokens();
+  } catch (error) {
+    dev.error("토큰 복원 실패:", error);
+  }
+};
+
+// 앱 시작 시 토큰 복원
+restoreAuthTokens();
 
 export const unstable_settings = {
   initialRouteName: "index",

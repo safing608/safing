@@ -1,19 +1,16 @@
+import { login as loginAPI } from "@/api/auth";
 import FontText from "@/components/common/FontText";
 import { COLORS } from "@/constants/colors";
 import { FONT_SIZES, SPACING } from "@/constants/sizes";
 import { dev } from "@/utils/dev";
-import axiosInstance from "@/api/axios";
-import { useAuthStore } from "@/stores/authStore";
-import { useUserStore } from "@/stores/userStore";
 import {
   GoogleSignin,
-  isErrorWithCode,
   isSuccessResponse,
-  statusCodes,
 } from "@react-native-google-signin/google-signin";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Pressable,
@@ -27,8 +24,7 @@ import Toast from "react-native-toast-message";
 function LoginScreen() {
   const { width } = useWindowDimensions();
   const [loading, setLoading] = useState(false);
-  const { hasSetLanguage, language } = useUserStore();
-  const { login } = useAuthStore();
+  const { t } = useTranslation();
 
   // SVG 원본 비율: 694:778 (가로:세로)
   const aspectRatio = 778 / 694;
@@ -40,115 +36,68 @@ function LoginScreen() {
   const googleButtonWidth = Math.min(300, width * 0.5);
   const googleButtonHeight = googleButtonWidth * googleAspectRatio;
 
+  // 구글 로그인
   const handleGoogleLogin = async () => {
+    if (loading) return;
+    setLoading(true);
 
     try {
+      // Google Play Services 체크
+      await GoogleSignin.hasPlayServices({
+        showPlayServicesUpdateDialog: true,
+      });
+
+      // Google 로그인 시도
       const response = await GoogleSignin.signIn();
 
       if (!isSuccessResponse(response)) {
-        dev.log("Google 로그인이 취소되었습니다.");
-        return;
+        throw new Error();
       }
-
-      dev.log("Google 로그인 응답:", response);
 
       const idToken = response.data.idToken;
+
       if (!idToken) {
-        Toast.show({
-          type: "error",
-          text1: "Google 인증 토큰을 받을 수 없습니다.",
+        throw new Error();
+      }
+
+      dev.log("Google idToken 획득:", idToken ? "획득" : "없음");
+
+      // 신규 유저인지 확인 (회원가입 여부로 판단)
+      const status = await loginAPI({
+        idToken,
+      });
+      if (status.isSignupRequired) {
+        router.push({
+          pathname: "/language",
+          params: { idToken, returnTo: "login" },
         });
+
         return;
       }
 
-      dev.log("Google idToken 획득:", idToken);
-
-      // 신규 유저인지 확인 (언어 설정 여부로 판단)
-      if (!hasSetLanguage) {
-        dev.log("신규 유저 - 언어 선택 화면으로 이동");
-
-        // idToken을 임시로 저장하고 언어 선택 화면으로 이동
-        // 언어 선택 후 다시 돌아와서 백엔드 API 호출
-        router.push({
-          pathname: "/(setup)/language",
-          params: { idToken, returnTo: "login" },
-        });
-      } else {
-        // 기존 유저 - 바로 백엔드 API 호출
-        await sendTokenToBackend(idToken, language);
-      }
+      // 기존 유저 - 바로 백엔드 API 호출
+      await sendTokenToBackend(idToken);
     } catch (error) {
-      if (isErrorWithCode(error)) {
-        switch (error.code) {
-          case statusCodes.SIGN_IN_CANCELLED:
-            dev.log("사용자가 로그인을 취소했습니다.");
-            break;
-          case statusCodes.IN_PROGRESS:
-            Toast.show({
-              type: "error",
-              text1: "이미 로그인 프로세스가 진행 중입니다.",
-            });
-            break;
-          case statusCodes.PLAY_SERVICES_NOT_AVAILABLE:
-            Toast.show({
-              type: "error",
-              text1: "Google Play Services가 사용할 수 없습니다.",
-            });
-            break;
-          default:
-            Toast.show({
-              type: "error",
-              text1: "로그인 중 오류가 발생했습니다.",
-            });
-
-            dev.error("Google 로그인 오류 코드:", error);
-        }
-      } else {
-        dev.error("Google 로그인 오류:", error);
-        Toast.show({
-          type: "error",
-          text1: "로그인 중 오류가 발생했습니다.",
-        });
-      }
+      dev.error("Google 로그인 오류:", error);
+      Toast.show({
+        type: "error",
+        text1: t("auth.login_failed"),
+      });
     } finally {
       setLoading(false);
     }
   };
 
   // 백엔드에 토큰 전송
-  const sendTokenToBackend = async (idToken: string, countryCode: string) => {
+  const sendTokenToBackend = async (idToken: string) => {
     try {
-      dev.log("백엔드에 토큰 전송:", { idToken: "***", countryCode });
-
-      const response = await axiosInstance.post("/backend_api/google", {
-        idToken,
-        countryCode,
-      });
-
-      dev.log("백엔드 응답:", response.data);
-
-      // 응답에서 토큰 추출 (백엔드 응답 구조에 따라 조정 필요)
-      const { accessToken, refreshToken } = response.data;
-
-      if (accessToken && refreshToken) {
-        // AuthStore에 로그인 정보 저장
-        login(accessToken, refreshToken, countryCode);
-
-        Toast.show({
-          type: "success",
-          text1: "로그인 성공",
-        });
-
-        // 메인 앱으로 이동
-        router.replace("/(main)");
-      } else {
-        throw new Error("토큰을 받을 수 없습니다.");
-      }
+      await loginAPI({ idToken });
+      router.replace("/");
     } catch (error) {
-      dev.error("백엔드 API 오류:", error);
+      dev.error("login 화면에서 API 오류:", error);
       Toast.show({
         type: "error",
-        text1: "서버 연결 중 오류가 발생했습니다.",
+        text1: t("error.common_error"),
       });
     }
   };

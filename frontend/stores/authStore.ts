@@ -1,43 +1,113 @@
 import { router } from "expo-router";
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { persist, createJSONStorage } from "zustand/middleware";
+import {
+  saveSecureStore,
+  getSecureStore,
+  deleteSecureStore,
+} from "@/utils/secureStore";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { dev } from "@/utils/dev";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
 
 interface AuthState {
   accessToken: string | null;
   refreshToken: string | null;
   isAuthenticated: boolean;
   countryCode: string | null;
+  isHydrated: boolean;
 
   // Actions
-  login: (accessToken: string, refreshToken: string, countryCode: string) => void;
-  logout: (redirectTo?: string) => void;
-  updateAccessToken: (accessToken: string) => void;
+  login: (
+    accessToken: string,
+    refreshToken: string,
+    countryCode: string,
+  ) => Promise<void>;
+  logout: (redirectTo?: string) => Promise<void>;
+  updateAccessToken: (accessToken: string) => Promise<void>;
+  restoreTokens: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       accessToken: null,
       refreshToken: null,
       isAuthenticated: false,
       countryCode: null,
+      isHydrated: false,
+
       //login action
-      login: (accessToken, refreshToken, countryCode) =>
-        set({ accessToken, refreshToken, isAuthenticated: true, countryCode }),
+      login: async (accessToken, refreshToken, countryCode) => {
+        // 토큰은 SecureStore에 별도 저장
+        await saveSecureStore("accessToken", accessToken);
+        await saveSecureStore("refreshToken", refreshToken);
+
+        set({
+          accessToken,
+          refreshToken,
+          isAuthenticated: true,
+          countryCode,
+          isHydrated: true,
+        });
+      },
 
       //logout action
-      logout: (redirectTo?: string) => {
-        set({ accessToken: null, refreshToken: null, isAuthenticated: false, countryCode: null });
+      logout: async (redirectTo?: string) => {
+        // SecureStore에서 토큰 제거
+        await deleteSecureStore("accessToken");
+        await deleteSecureStore("refreshToken");
+
+        // Google 로그아웃
+        await GoogleSignin.revokeAccess();
+        await GoogleSignin.signOut();
+        
+        set({
+          accessToken: null,
+          refreshToken: null,
+          isAuthenticated: false,
+          countryCode: null,
+          isHydrated: true,
+        });
+
         if (redirectTo) {
           router.replace(redirectTo);
         }
       },
 
       //updateAccessToken action
-      updateAccessToken: (accessToken: string) => set({ accessToken }),
+      updateAccessToken: async (accessToken: string) => {
+        await saveSecureStore("accessToken", accessToken);
+        set({ accessToken });
+      },
+
+      // SecureStore에서 토큰 복원
+      restoreTokens: async () => {
+        try {
+          const accessToken = await getSecureStore("accessToken");
+          const refreshToken = await getSecureStore("refreshToken");
+
+          if (accessToken && refreshToken) {
+            set({
+              accessToken,
+              refreshToken,
+              isAuthenticated: true,
+            });
+          }
+        } catch (error) {
+          dev.error("토큰 복원 실패:", error);
+        }
+      },
     }),
     {
       name: "auth-storage",
+      storage: createJSONStorage(() => AsyncStorage),
+      // 토큰은 SecureStore에 저장하므로 persist에서 제외
+      partialize: (state) => ({
+        isAuthenticated: state.isAuthenticated,
+        countryCode: state.countryCode,
+        isHydrated: state.isHydrated,
+      }),
     },
   ),
 );

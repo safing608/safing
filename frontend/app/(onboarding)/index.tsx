@@ -1,6 +1,7 @@
 import FontText from "@/components/common/FontText";
 import { COLORS } from "@/constants/colors";
 import { FONT_SIZES, SPACING } from "@/constants/sizes";
+import { useAuthStore } from "@/stores/authStore";
 import { Image } from "expo-image";
 import { router, SplashScreen } from "expo-router";
 import React, { useEffect } from "react";
@@ -11,17 +12,21 @@ interface OnboardingScreenProps {}
 
 // 해당 경로는 SPLASH SCREEN
 function OnboardingScreen({}: OnboardingScreenProps) {
+  const { isAuthenticated } = useAuthStore();
+
   useEffect(() => {
     SplashScreen.hideAsync();
   }, []);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      // TODO: 인증 상태 확인 후 login 또는 main으로 분기
-      // 일단은 dev 단계이므로 components 페이지로 이동
-      router.replace("/(dev)/components");
-    }, 1200);
-    return () => clearTimeout(timer);
+    if (isAuthenticated) {
+      router.replace("/chat");
+    } else {
+      const timer = setTimeout(() => {
+        router.replace("/login");
+      }, 1200);
+      return () => clearTimeout(timer);
+    }
   }, []);
 
   const { width } = useWindowDimensions();

@@ -8,8 +8,6 @@ import { dev } from "./dev";
  *   (Android 클라이언트 ID가 아닌 Web Client ID 사용 — idToken 발급에 필요)
  */
 export const configureGoogleSignin = () => {
-  dev.log("GoogleSignin 설정 시도", process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID);
-
   GoogleSignin.configure({
     webClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID ?? "",
   });
