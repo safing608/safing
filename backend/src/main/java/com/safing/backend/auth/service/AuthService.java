@@ -65,6 +65,7 @@ public class AuthService {
         // 6. 기존 회원 응답 반환
         return RegisteredGoogleAuthResponse.registered(
             tokenResponse.userId(),
+            tokenResponse.countryCode(),
             tokenResponse.accessToken(),
             tokenResponse.refreshToken()
         );
@@ -238,6 +239,7 @@ public class AuthService {
 
         return new TokenResponse(
                 user.getUserId(),
+                user.getCountryCode(),
                 accessToken,
                 refreshToken
         );

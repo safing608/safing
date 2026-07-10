@@ -1,7 +1,10 @@
 package com.safing.backend.auth.dto.response;
 
+import com.safing.backend.common.enumtype.CountryCode;
+
 public record RegisteredGoogleAuthResponse(
     Long userId,
+    CountryCode countryCode,
     String accessToken,
     String refreshToken
 
@@ -21,10 +24,11 @@ public record RegisteredGoogleAuthResponse(
 
     public static RegisteredGoogleAuthResponse registered(
             Long userId,
+            CountryCode countryCode,
             String accessToken,
             String refreshToken
     ) {
-        return new RegisteredGoogleAuthResponse(userId, accessToken, refreshToken);
+        return new RegisteredGoogleAuthResponse(userId, countryCode, accessToken, refreshToken);
     }
 
 }
