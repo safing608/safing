@@ -1,6 +1,9 @@
+import { reissueToken } from "@/api/auth";
 import FontText from "@/components/common/FontText";
 import { COLORS } from "@/constants/colors";
 import { FONT_SIZES, SPACING } from "@/constants/sizes";
+import { useAuthStore } from "@/stores/authStore";
+import { dev } from "@/utils/dev";
 import { Image } from "expo-image";
 import { router, SplashScreen } from "expo-router";
 import React, { useEffect } from "react";
@@ -11,18 +14,30 @@ interface OnboardingScreenProps {}
 
 // 해당 경로는 SPLASH SCREEN
 function OnboardingScreen({}: OnboardingScreenProps) {
+  const { refreshToken } = useAuthStore.getState();
+
   useEffect(() => {
     SplashScreen.hideAsync();
   }, []);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      // TODO: 인증 상태 확인 후 login 또는 main으로 분기
-      // 일단은 dev 단계이므로 components 페이지로 이동
-      router.replace("/(dev)/components");
-    }, 1200);
-    return () => clearTimeout(timer);
-  }, []);
+    const initializeApp = async () => {
+      try {
+        // 토큰 유효성 검증
+        await reissueToken(refreshToken ?? "");
+
+        // 스플래시 화면 최소 표시 시간 (1.2초)
+        await new Promise((resolve) => setTimeout(resolve, 1200));
+
+        router.replace("/chat");
+      } catch (error) {
+        dev.error("토큰 갱신 실패:", error);
+        router.replace("/login");
+      }
+    };
+
+    initializeApp();
+  }, [refreshToken]);
 
   const { width } = useWindowDimensions();
   // SVG 원본 비율: 694:778 (가로:세로)

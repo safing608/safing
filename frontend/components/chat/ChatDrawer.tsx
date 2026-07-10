@@ -4,6 +4,7 @@ import { COLORS } from "@/constants/colors";
 import { FONT_SIZES, SPACING } from "@/constants/sizes";
 import { mockChatItem } from "@/mock/chat";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import Lucide from "@react-native-vector-icons/lucide";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -21,6 +22,7 @@ interface ChatDrawerProps {
   onClose: () => void;
   onNewChat: () => void;
   onLanguageChange: () => void;
+  onSettings: () => void;
   onChatHistory: () => void;
 }
 
@@ -29,6 +31,7 @@ function ChatDrawer({
   onClose,
   onNewChat,
   onLanguageChange,
+  onSettings,
   onChatHistory,
 }: ChatDrawerProps) {
   const { width } = useWindowDimensions();
@@ -95,6 +98,23 @@ function ChatDrawer({
                     style={styles.menuText}
                   >
                     {t("chat.drawer_language")}
+                  </FontText>
+                </Pressable>
+
+                {/* auth 관련 */}
+                <Pressable style={styles.menuItem} onPress={onSettings}>
+                  <Lucide
+                    name="settings"
+                    size={20}
+                    color={COLORS.MOEL_BLUE}
+                  />
+                  <FontText
+                    weight="medium"
+                    size={FONT_SIZES.BODY}
+                    color={COLORS.BLACK}
+                    style={styles.menuText}
+                  >
+                    {t("auth.settings")}
                   </FontText>
                 </Pressable>
               </View>

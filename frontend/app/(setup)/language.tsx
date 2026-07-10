@@ -1,32 +1,67 @@
+import { signup } from "@/api/auth";
 import Button from "@/components/common/Button";
 import FontText from "@/components/common/FontText";
 import LanguageCard from "@/components/common/LanguageCard";
 import { COLORS } from "@/constants/colors";
 import { CountryCode, LANGUAGE_OPTIONS } from "@/constants/i18n";
 import { FONT_SIZES, SPACING } from "@/constants/sizes";
+import { useAuthStore } from "@/stores/authStore";
 import { useUserStore } from "@/stores/userStore";
 import { dev } from "@/utils/dev";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import React, { useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Toast from "react-native-toast-message";
 
 function LanguageScreen() {
+  const { t } = useTranslation();
   const language = useUserStore((state) => state.language);
-  const hasSetLanguage = useUserStore((state) => state.hasSetLanguage);
   const setLanguage = useUserStore((state) => state.setLanguage);
+  const { login: setAuth } = useAuthStore.getState();
+
+  // URL 파라미터로 받은 idToken과 returnTo 확인
+  const { idToken, returnTo } = useLocalSearchParams<{
+    idToken?: string;
+    returnTo?: string;
+  }>();
+
+  // 백엔드에 토큰 전송
+  const sendTokenToBackend = async (idToken: string, countryCode: string) => {
+    try {
+      const data = await signup({
+        idToken,
+        countryCode,
+      });
+
+      await setAuth(data.accessToken, data.refreshToken, data.countryCode);
+
+      router.replace("/chat");
+      
+    } catch (error) {
+      dev.error("language 화면에서 API 오류:", error);
+      Toast.show({
+        type: "error",
+        text1: t("error.common_error"),
+      });
+    }
+  };
 
   // 언어 선택 확인
-  const handleSubmit = () => {
-    dev.log("language", language);
-    // TODO: 언어 설정 후 메인 화면으로 이동
-    router.push("/chat");
+  const handleSubmit = async () => {
+    // Google 로그인에서 온 경우 백엔드 API 호출
+    if (idToken && returnTo === "login") {
+      await sendTokenToBackend(idToken, language);
+    } else {
+      // 일반적인 언어 설정 후 메인 화면으로 이동
+      router.replace("/chat");
+    }
   };
 
   // 언어 선택 시 언어 설정
   const handleSelect = useCallback(
     (countryCode: CountryCode) => {
-      dev.log("handleSelect", countryCode);
       setLanguage(countryCode);
     },
     [setLanguage],
@@ -59,7 +94,7 @@ function LanguageScreen() {
               key={countryCode}
               countryCode={countryCode}
               languageName={languageName}
-              isSelected={hasSetLanguage && language === countryCode}
+              isSelected={language === countryCode}
               onPress={() => handleSelect(countryCode)}
             />
           ))}

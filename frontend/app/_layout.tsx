@@ -1,17 +1,19 @@
 import queryClient from "@/api/client";
-import { useReactQueryDevTools } from "@dev-plugins/react-query";
-import { QueryClientProvider } from "@tanstack/react-query";
-import { SplashScreen, Stack } from "expo-router";
-import "react-native-reanimated";
-import { useFonts } from "expo-font";
-import { use } from "i18next";
-import { initReactI18next } from "react-i18next";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import toastConfig from "@/components/common/ToastConfig";
 import { DEFAULT_LANGUAGE } from "@/constants/i18n";
+import { useAuthStore } from "@/stores/authStore";
 import { useUserStore } from "@/stores/userStore";
 import { dev } from "@/utils/dev";
+import { configureGoogleSignin } from "@/utils/googleSignin";
+import { useReactQueryDevTools } from "@dev-plugins/react-query";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { useFonts } from "expo-font";
+import { SplashScreen, Stack } from "expo-router";
+import { use } from "i18next";
+import { initReactI18next } from "react-i18next";
+import "react-native-reanimated";
 import Toast from "react-native-toast-message";
-import toastConfig from "@/components/common/ToastConfig";
 
 // 저장된 언어 확인하고 i18n 초기화
 const initializeI18n = (() => {
@@ -27,10 +29,7 @@ const initializeI18n = (() => {
       if (stored) {
         const parsed = JSON.parse(stored);
         const userData = parsed.state;
-        // 이미 언어를 설정한 사용자는 저장된 언어 사용
-        if (userData?.hasSetLanguage && userData?.language) {
-          initialLanguage = userData.language;
-        }
+        initialLanguage = userData.language;
       }
     } catch {
       // AsyncStorage 오류 시 기본 언어 사용
@@ -58,7 +57,19 @@ const initializeI18n = (() => {
 })();
 
 // 앱 시작 시 i18n 초기화
-initializeI18n().catch(console.error);
+initializeI18n().catch(dev.error);
+
+// GoogleSignin 1회 초기화
+configureGoogleSignin();
+
+// 토큰 복원
+const restoreAuthTokens = async () => {
+  const { restoreTokens } = useAuthStore.getState();
+  await restoreTokens();
+};
+
+// 앱 시작 시 토큰 복원
+restoreAuthTokens();
 
 export const unstable_settings = {
   initialRouteName: "index",

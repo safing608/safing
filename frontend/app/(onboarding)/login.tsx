@@ -1,63 +1,97 @@
+import { login } from "@/api/auth";
+import { useAuthStore } from "@/stores/authStore";
 import FontText from "@/components/common/FontText";
 import { COLORS } from "@/constants/colors";
 import { FONT_SIZES, SPACING } from "@/constants/sizes";
-import { Image } from "expo-image";
-import React from "react";
+import { dev } from "@/utils/dev";
 import {
-  Alert,
+  GoogleSignin,
+  isSuccessResponse,
+} from "@react-native-google-signin/google-signin";
+import { Image } from "expo-image";
+import { router } from "expo-router";
+import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
+import {
+  ActivityIndicator,
   Pressable,
   StyleSheet,
   useWindowDimensions,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Toast from "react-native-toast-message";
 
-// TODO: 백엔드 API 준비 후 주석 해제
-// import { GoogleSignin } from '@react-native-google-signin/google-signin';
-
-interface LoginScreenProps {}
-
-function LoginScreen({}: LoginScreenProps) {
+function LoginScreen() {
   const { width } = useWindowDimensions();
+  const [loading, setLoading] = useState(false);
+  const { t } = useTranslation();
+  const setAuth = useAuthStore((state) => state.login);
+
   // SVG 원본 비율: 694:778 (가로:세로)
-  const aspectRatio = 778 / 694; // 약 1.12 (세로가 더 김)
+  const aspectRatio = 778 / 694;
   const imageWidth = width * 0.4;
   const imageHeight = imageWidth * aspectRatio;
 
-  // Google 로고 반응형 크기 계산
-  // 원본 Google SVG 비율: 189:40 (가로:세로)
-  const googleAspectRatio = 40 / 189; // 세로/가로
-  const googleButtonWidth = Math.min(300, width * 0.5); // 화면 너비의 50%
+  // Google 로고 반응형 크기: 원본 비율 189:40
+  const googleAspectRatio = 40 / 189;
+  const googleButtonWidth = Math.min(300, width * 0.5);
   const googleButtonHeight = googleButtonWidth * googleAspectRatio;
 
-  // 반응형 폰트 크기 계산 (고려해보기)
-  // const responsiveTitleSize = Math.min(Math.max(width * 0.07, 16), 24); // 최소 20px, 최대 32px
-  // const responsiveCaptionSize = Math.min(Math.max(width * 0.04, 8 ), 16); // 최소 12px, 최대 18px
-
-  // TODO: 백엔드 API 연동 시 실제 Google OAuth 구현
+  // 구글 로그인
   const handleGoogleLogin = async () => {
+    if (loading) return;
+    setLoading(true);
+
     try {
-      // TODO: Google 설정 초기화 (app.json의 GoogleService 파일 필요)
-      // await GoogleSignin.hasPlayServices();
-      // const userInfo = await GoogleSignin.signIn();
-      // console.log('Google User Info:', userInfo);
+      // Google Play Services 체크
+      await GoogleSignin.hasPlayServices({
+        showPlayServicesUpdateDialog: true,
+      });
 
-      // TODO: 백엔드 API로 토큰 전송하여 인증 처리
-      // const response = await fetch('/api/auth/google', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ idToken: userInfo.idToken })
-      // });
+      // Google 로그인 시도
+      const response = await GoogleSignin.signIn();
 
-      Alert.alert(
-        "Google 로그인",
-        "백엔드 API 연동 후 구현될 예정입니다.\n\n준비사항:\n• Google Cloud Console 설정\n• GoogleService-Info.plist (iOS)\n• google-services.json (Android)",
-        [{ text: "확인" }],
+      if (!isSuccessResponse(response)) {
+        throw new Error();
+      }
+
+      const idToken = response.data.idToken;
+
+      if (!idToken) {
+        throw new Error();
+      }
+
+      dev.log("Google idToken 획득:", idToken ? "획득" : "없음");
+
+      const data = await login({ idToken });
+
+      if (data.status === "SIGNUP_REQUIRED") {
+        router.push({
+          pathname: "/language",
+          params: { idToken, returnTo: "login" },
+        });
+        return;
+      }
+
+      // 기존 회원: 첫 login 응답으로 바로 로그인 처리
+      await setAuth(
+        data.accessToken,
+        data.refreshToken,
+        data.countryCode ?? "",
       );
+      router.replace("/chat");
     } catch (error) {
-      console.error("Google Sign-In Error:", error);
+      dev.error("Google 로그인 오류:", error);
+      Toast.show({
+        type: "error",
+        text1: t("auth.login_failed"),
+      });
+    } finally {
+      setLoading(false);
     }
   };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
@@ -82,17 +116,18 @@ function LoginScreen({}: LoginScreenProps) {
           외국인 근로자 산업안전 지원 AI 서비스
         </FontText>
         <View style={styles.loginButtonContainer}>
-          <Pressable onPress={handleGoogleLogin}>
-            <Image
-              source={require("@/assets/icons/google.svg")}
-              style={[
-                styles.googleIcon,
-                {
-                  width: googleButtonWidth,
-                  height: googleButtonHeight,
-                },
-              ]}
-            />
+          <Pressable onPress={handleGoogleLogin} disabled={loading}>
+            {loading ? (
+              <ActivityIndicator color={COLORS.MOEL_BLUE} />
+            ) : (
+              <Image
+                source={require("@/assets/icons/google.svg")}
+                style={[
+                  styles.googleIcon,
+                  { width: googleButtonWidth, height: googleButtonHeight },
+                ]}
+              />
+            )}
           </Pressable>
         </View>
       </View>
@@ -125,10 +160,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginTop: SPACING.XS,
+    minHeight: 44,
   },
   googleIcon: {
-    // 반응형 크기는 인라인 스타일로 적용
-    borderRadius: 20, // Google 버튼의 둥근 모서리
+    borderRadius: 20,
   },
 });
 
