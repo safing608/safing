@@ -1,10 +1,5 @@
 import { ResponseDTO } from "./api";
 
-/**
- * 로그인
- * @description 로그인 요청/응답 타입
- */
-
 // 로그인 요청
 export interface LoginRequestDTO {
   idToken: string;
@@ -23,25 +18,23 @@ export interface NotRegisteredLoginResponseDTO {
   status: "SIGNUP_REQUIRED";
 }
 
-/**
- * 회원가입
- * @description 회원가입 요청/응답 타입
- */
+// 회원가입 요청
 export interface SignupRequestDTO {
   idToken: string;
   countryCode: string;
 }
 
+// 회원가입 응답
 export interface SignupResponseDTO {
   userId: string;
   accessToken: string;
   refreshToken: string;
 }
 
-/**
- * 토큰
- * @description 토큰 요청/응답 타입
- */
+// 로그아웃 요청
+export interface LogoutRequestDTO {
+  refreshToken: string;
+}
 
 // 토큰 재발급 요청
 export type TokenRequestDTO = {

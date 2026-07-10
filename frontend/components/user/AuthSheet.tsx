@@ -3,7 +3,10 @@ import FontText from "@/components/common/FontText";
 import { COLORS } from "@/constants/colors";
 import { FONT_SIZES, SPACING } from "@/constants/sizes";
 import { useModalAnimation } from "@/hooks/useModalAnimation";
+import { useAuthStore } from "@/stores/authStore";
+import { dev } from "@/utils/dev";
 import Lucide from "@react-native-vector-icons/lucide";
+import { router } from "expo-router";
 import React, { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -26,24 +29,22 @@ function AuthSheet({ visible, onClose }: AuthSheetProps) {
   const { bottom } = useSafeAreaInsets();
   const [loading, setLoading] = useState(false);
   const { t } = useTranslation();
+  const { logout: logoutAction, refreshToken } = useAuthStore.getState();
 
   const { overlayOpacity, sheetTranslateY, sheetScale } = useModalAnimation({
     visible,
   });
 
   // 로그아웃 핸들러
-  const handleLogout = () => {
-    logout()
-      .catch(() => {
-        onClose();
-        Toast.show({
-          type: "error",
-          text1: t("auth.logout_failed"),
-        });
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+  const handleLogout = async () => {
+    try {
+      await logout({ refreshToken: refreshToken! });
+      await logoutAction("/login");
+    } catch (error) {
+      dev.error("로그아웃 오류:", error);
+    } finally {
+      router.replace("/login");
+    }
   };
 
   // 회원탈퇴 핸들러

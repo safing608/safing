@@ -1,14 +1,14 @@
-import { router } from "expo-router";
-import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
+import { dev } from "@/utils/dev";
 import {
-  saveSecureStore,
-  getSecureStore,
   deleteSecureStore,
+  getSecureStore,
+  saveSecureStore,
 } from "@/utils/secureStore";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { dev } from "@/utils/dev";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import { router } from "expo-router";
+import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
 
 interface AuthState {
   accessToken: string | null;
@@ -61,7 +61,7 @@ export const useAuthStore = create<AuthState>()(
         // Google 로그아웃
         await GoogleSignin.revokeAccess();
         await GoogleSignin.signOut();
-        
+
         set({
           accessToken: null,
           refreshToken: null,
@@ -99,6 +99,7 @@ export const useAuthStore = create<AuthState>()(
         }
       },
     }),
+
     {
       name: "auth-storage",
       storage: createJSONStorage(() => AsyncStorage),

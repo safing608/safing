@@ -5,6 +5,7 @@ import LanguageCard from "@/components/common/LanguageCard";
 import { COLORS } from "@/constants/colors";
 import { CountryCode, LANGUAGE_OPTIONS } from "@/constants/i18n";
 import { FONT_SIZES, SPACING } from "@/constants/sizes";
+import { useAuthStore } from "@/stores/authStore";
 import { useUserStore } from "@/stores/userStore";
 import { dev } from "@/utils/dev";
 import { router, useLocalSearchParams } from "expo-router";
@@ -18,6 +19,7 @@ function LanguageScreen() {
   const { t } = useTranslation();
   const language = useUserStore((state) => state.language);
   const setLanguage = useUserStore((state) => state.setLanguage);
+  const { login: setAuth } = useAuthStore.getState();
 
   // URL 파라미터로 받은 idToken과 returnTo 확인
   const { idToken, returnTo } = useLocalSearchParams<{
@@ -28,10 +30,13 @@ function LanguageScreen() {
   // 백엔드에 토큰 전송
   const sendTokenToBackend = async (idToken: string, countryCode: string) => {
     try {
-      await signup({
+      const data = await signup({
         idToken,
         countryCode,
       });
+
+      await setAuth(data.accessToken, data.refreshToken, data.countryCode);
+      router.replace("/chat");
 
       router.replace("/chat");
     } catch (error) {
@@ -57,7 +62,6 @@ function LanguageScreen() {
   // 언어 선택 시 언어 설정
   const handleSelect = useCallback(
     (countryCode: CountryCode) => {
-      dev.log("handleSelect", countryCode);
       setLanguage(countryCode);
     },
     [setLanguage],

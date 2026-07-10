@@ -1,19 +1,19 @@
 import queryClient from "@/api/client";
+import toastConfig from "@/components/common/ToastConfig";
+import { DEFAULT_LANGUAGE } from "@/constants/i18n";
+import { useAuthStore } from "@/stores/authStore";
+import { useUserStore } from "@/stores/userStore";
+import { dev } from "@/utils/dev";
+import { configureGoogleSignin } from "@/utils/googleSignin";
 import { useReactQueryDevTools } from "@dev-plugins/react-query";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { SplashScreen, Stack } from "expo-router";
-import "react-native-reanimated";
 import { useFonts } from "expo-font";
+import { SplashScreen, Stack } from "expo-router";
 import { use } from "i18next";
 import { initReactI18next } from "react-i18next";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { DEFAULT_LANGUAGE } from "@/constants/i18n";
-import { useUserStore } from "@/stores/userStore";
-import { useAuthStore } from "@/stores/authStore";
-import { dev } from "@/utils/dev";
+import "react-native-reanimated";
 import Toast from "react-native-toast-message";
-import toastConfig from "@/components/common/ToastConfig";
-import { configureGoogleSignin } from "@/utils/googleSignin";
 
 // 저장된 언어 확인하고 i18n 초기화
 const initializeI18n = (() => {
@@ -64,12 +64,8 @@ configureGoogleSignin();
 
 // 토큰 복원
 const restoreAuthTokens = async () => {
-  try {
-    const { restoreTokens } = useAuthStore.getState();
-    await restoreTokens();
-  } catch (error) {
-    dev.error("토큰 복원 실패:", error);
-  }
+  const { restoreTokens } = useAuthStore.getState();
+  await restoreTokens();
 };
 
 // 앱 시작 시 토큰 복원

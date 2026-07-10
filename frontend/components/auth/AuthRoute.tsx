@@ -10,6 +10,7 @@ function AuthRoute({ children }: AuthRouteProps) {
   const { isAuthenticated, isHydrated } = useAuthStore();
 
   useEffect(() => {
+    // 인증 상태 확인
     if (isHydrated && !isAuthenticated) {
       router.replace("/login");
     }

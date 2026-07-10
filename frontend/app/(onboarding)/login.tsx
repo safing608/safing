@@ -1,4 +1,5 @@
-import { login as loginAPI } from "@/api/auth";
+import { login } from "@/api/auth";
+import { useAuthStore } from "@/stores/authStore";
 import FontText from "@/components/common/FontText";
 import { COLORS } from "@/constants/colors";
 import { FONT_SIZES, SPACING } from "@/constants/sizes";
@@ -25,6 +26,7 @@ function LoginScreen() {
   const { width } = useWindowDimensions();
   const [loading, setLoading] = useState(false);
   const { t } = useTranslation();
+  const setAuth = useAuthStore((state) => state.login);
 
   // SVG 원본 비율: 694:778 (가로:세로)
   const aspectRatio = 778 / 694;
@@ -62,21 +64,23 @@ function LoginScreen() {
 
       dev.log("Google idToken 획득:", idToken ? "획득" : "없음");
 
-      // 신규 유저인지 확인 (회원가입 여부로 판단)
-      const status = await loginAPI({
-        idToken,
-      });
-      if (status.isSignupRequired) {
+      const data = await login({ idToken });
+
+      if (data.status === "SIGNUP_REQUIRED") {
         router.push({
           pathname: "/language",
           params: { idToken, returnTo: "login" },
         });
-
         return;
       }
 
-      // 기존 유저 - 바로 백엔드 API 호출
-      await sendTokenToBackend(idToken);
+      // 기존 회원: 첫 login 응답으로 바로 로그인 처리
+      await setAuth(
+        data.accessToken,
+        data.refreshToken,
+        data.countryCode ?? "",
+      );
+      router.replace("/chat");
     } catch (error) {
       dev.error("Google 로그인 오류:", error);
       Toast.show({
@@ -85,20 +89,6 @@ function LoginScreen() {
       });
     } finally {
       setLoading(false);
-    }
-  };
-
-  // 백엔드에 토큰 전송
-  const sendTokenToBackend = async (idToken: string) => {
-    try {
-      await loginAPI({ idToken });
-      router.replace("/");
-    } catch (error) {
-      dev.error("login 화면에서 API 오류:", error);
-      Toast.show({
-        type: "error",
-        text1: t("error.common_error"),
-      });
     }
   };
 

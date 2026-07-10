@@ -24,25 +24,33 @@ function LanguageSheet({ visible, onClose }: LanguageSheetProps) {
   const language = useUserStore((state) => state.language);
   const setLanguage = useUserStore((state) => state.setLanguage);
 
-  const { overlayOpacity, sheetTranslateY, animationDurationOut } =
+  const {overlayOpacity, sheetTranslateY, animationDurationOut } =
     useModalAnimation({
       visible,
     });
 
   // 언어 선택 시 언어 설정
   const handleSelect = useCallback(
-    async (countryCode: CountryCode) => {
+    async (languageCode: CountryCode) => {
       try {
-        await changeCountryCode({ countryCode });
+        // 이미 선택된 언어면 아무 동작하지 않음
+        if (languageCode === language) {
+          return;
+        }
+        
+        await changeCountryCode({ countryCode: languageCode });
 
-        setLanguage(countryCode);
+        setLanguage(languageCode);
         onClose();
+        
+        // 언어 변경 완료 토스트
         setTimeout(() => {
           Toast.show({
             type: "success",
             text1: i18nT("language.changed"),
           });
         }, animationDurationOut + 50);
+        
       } catch (error) {
         onClose();
         Toast.show({
@@ -51,7 +59,7 @@ function LanguageSheet({ visible, onClose }: LanguageSheetProps) {
         });
       }
     },
-    [setLanguage, onClose],
+    [language, setLanguage, onClose, animationDurationOut, t],
   );
 
   return (
