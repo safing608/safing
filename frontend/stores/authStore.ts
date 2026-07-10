@@ -9,6 +9,8 @@ import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { router } from "expo-router";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
+import { useUserStore } from "./userStore";
+import { CountryCode, DEFAULT_LANGUAGE } from "@/constants/i18n";
 
 interface AuthState {
   accessToken: string | null;
@@ -43,6 +45,11 @@ export const useAuthStore = create<AuthState>()(
         await saveSecureStore("accessToken", accessToken);
         await saveSecureStore("refreshToken", refreshToken);
 
+        // 언어는 AsyncStorage에 저장
+        useUserStore
+          .getState()
+          .setLanguage((countryCode as CountryCode) ?? DEFAULT_LANGUAGE);
+
         set({
           accessToken,
           refreshToken,
@@ -61,6 +68,9 @@ export const useAuthStore = create<AuthState>()(
         // Google 로그아웃
         await GoogleSignin.revokeAccess();
         await GoogleSignin.signOut();
+
+        // 언어설정 초기화
+        useUserStore.getState().resetUser();
 
         set({
           accessToken: null,

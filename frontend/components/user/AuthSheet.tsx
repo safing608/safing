@@ -4,6 +4,7 @@ import { COLORS } from "@/constants/colors";
 import { FONT_SIZES, SPACING } from "@/constants/sizes";
 import { useModalAnimation } from "@/hooks/useModalAnimation";
 import { useAuthStore } from "@/stores/authStore";
+import { useUserStore } from "@/stores/userStore";
 import { dev } from "@/utils/dev";
 import Lucide from "@react-native-vector-icons/lucide";
 import { router } from "expo-router";
@@ -30,7 +31,6 @@ function AuthSheet({ visible, onClose }: AuthSheetProps) {
   const [loading, setLoading] = useState(false);
   const { t } = useTranslation();
   const { logout: logoutAction, refreshToken } = useAuthStore.getState();
-
   const { overlayOpacity, sheetTranslateY, sheetScale } = useModalAnimation({
     visible,
   });

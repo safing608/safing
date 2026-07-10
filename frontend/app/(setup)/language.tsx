@@ -36,9 +36,9 @@ function LanguageScreen() {
       });
 
       await setAuth(data.accessToken, data.refreshToken, data.countryCode);
-      router.replace("/chat");
 
       router.replace("/chat");
+      
     } catch (error) {
       dev.error("language 화면에서 API 오류:", error);
       Toast.show({
