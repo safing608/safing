@@ -1,6 +1,8 @@
-import ChatDrawer from "@/components/common/chat/ChatDrawer";
-import ChatHeader from "@/components/common/chat/ChatHeader";
-import LanguageSheet from "@/components/common/LanguageSheet";
+import AuthRoute from "@/components/auth/AuthRoute";
+import ChatDrawer from "@/components/chat/ChatDrawer";
+import ChatHeader from "@/components/chat/ChatHeader";
+import AuthSheet from "@/components/user/AuthSheet";
+import LanguageSheet from "@/components/user/LanguageSheet";
 import { COLORS } from "@/constants/colors";
 import { SPACING } from "@/constants/sizes";
 import { Stack, useRouter } from "expo-router";
@@ -11,6 +13,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function MainLayout() {
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [languageSheetVisible, setLanguageSheetVisible] = useState(false);
+  const [authSheetVisible, setAuthSheetVisible] = useState(false);
   const router = useRouter();
 
   // 채팅 드로어 열기
@@ -29,6 +32,7 @@ export default function MainLayout() {
     router.push("/chat");
   };
 
+  // 언어 변경 클릭 시 언어 변경 모달 열기
   const handleLanguageChange = () => {
     setDrawerVisible(false);
     setLanguageSheetVisible(true);
@@ -41,43 +45,56 @@ export default function MainLayout() {
     Alert.alert("대화 내역", "선택된 대화방으로 이동합니다.");
   };
 
+  // 계정 설정 클릭 시 계정 설정 액션 시트 열기
+  const handleSettings = () => {
+    setDrawerVisible(false);
+    setAuthSheetVisible(true);
+  };
+
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        <ChatHeader onMenuPress={handleMenuPress} />
+    <AuthRoute>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.container}>
+          <ChatHeader onMenuPress={handleMenuPress} />
 
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: {
-              backgroundColor: COLORS.WHITE,
-            },
-          }}
-        >
-          <Stack.Screen
-            name="chat/index"
-            options={{ headerShown: false, title: "" }}
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: {
+                backgroundColor: COLORS.WHITE,
+              },
+            }}
+          >
+            <Stack.Screen
+              name="chat/index"
+              options={{ headerShown: false, title: "" }}
+            />
+            <Stack.Screen
+              name="chat/[id]"
+              options={{ headerShown: false, title: "" }}
+            />
+          </Stack>
+
+          <ChatDrawer
+            visible={drawerVisible}
+            onClose={handleDrawerClose}
+            onNewChat={handleNewChat}
+            onLanguageChange={handleLanguageChange}
+            onChatHistory={handleChatHistory}
+            onSettings={handleSettings}
           />
-          <Stack.Screen
-            name="chat/[id]"
-            options={{ headerShown: false, title: "" }}
+
+          <LanguageSheet
+            visible={languageSheetVisible}
+            onClose={() => setLanguageSheetVisible(false)}
           />
-        </Stack>
-
-        <ChatDrawer
-          visible={drawerVisible}
-          onClose={handleDrawerClose}
-          onNewChat={handleNewChat}
-          onLanguageChange={handleLanguageChange}
-          onChatHistory={handleChatHistory}
-        />
-
-        <LanguageSheet
-          visible={languageSheetVisible}
-          onClose={() => setLanguageSheetVisible(false)}
-        />
-      </View>
-    </SafeAreaView>
+          <AuthSheet
+            visible={authSheetVisible}
+            onClose={() => setAuthSheetVisible(false)}
+          />
+        </View>
+      </SafeAreaView>
+    </AuthRoute>
   );
 }
 

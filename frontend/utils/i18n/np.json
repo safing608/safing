@@ -6,11 +6,27 @@
       "input_placeholder": "कृपया आफ्नो प्रश्न प्रविष्ट गर्नुहोस्।",
       "drawer_new_chat": "नयाँ कुराकानी",
       "drawer_language": "भाषा परिवर्तन",
-        "drawer_chat_history": "कुराकानी इतिहास"
-      },
-      "language": {
-        "select_language": "कृपया भाषा छान्नुहोस्।",
-        "changed": "भाषा परिवर्तन भयो।"
-      }
+      "drawer_chat_history": "कुराकानी इतिहास"
+    },
+    "language": {
+      "select_language": "कृपया भाषा छान्नुहोस्।",
+      "changed": "भाषा परिवर्तन भयो।"
+    },
+    "auth": {
+      "settings": "खाता सेटिङहरू",
+      "logout": "लगआउट",
+      "delete_account": "खाता मेटाउनुहोस्",
+      "delete": "मेटाउनुहोस्",
+      "delete_account_confirm": "के तपाईं आफ्नो खाता मेटाउन चाहनुहुन्छ?",
+      "login_failed": "लगइन गर्दा त्रुटि भयो।",
+      "logout_failed": "लगआउट गर्दा त्रुटि भयो।"
+    },
+    "common": {
+      "cancel": "रद्द गर्नुहोस्",
+      "confirm": "पुष्टि गर्नुहोस्"
+    },
+    "error": {
+      "common_error": "केही समस्या भयो। कृपया केही समयपछि पुनः प्रयास गर्नुहोस्।"
+    }
   }
 }

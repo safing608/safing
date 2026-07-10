@@ -1,0 +1,65 @@
+package com.safing.backend.auth.entity;
+import com.safing.backend.user.entity.User;
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "refresh_tokens")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class RefreshToken {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "refresh_token_id")
+    private Long refreshTokenId;
+
+    @ManyToOne(fetch = FetchType.LAZY) // 여러개의 RefreshToken - 하나의 User (여러 기기에서 로그인 가능)
+    // FetchType.LAZY => 처음에는 RefreshToken만 조회. 필요할때 token.getUser()를 호출하면 그때 User 조회
+    // FetchType.EAGER => 바로 User까지 조회
+    @JoinColumn(name = "user_id", nullable = false) // 이 엔티티의 user 필드는 refresh_token.user_id 컬럼과 연결된다
+    private User user;
+
+    @Column(name = "token_hash", nullable = false, unique = true)
+    private String tokenHash;
+
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "expired_at", nullable =false)
+    private LocalDateTime expiredAt;
+
+    @Column(name = "revoked_at")
+    private LocalDateTime revokedAt;
+
+    /**
+     * Refresh Token 무효화
+     * - 로그아웃 또는 재발급 성공 시 기존 토큰을 더 이상 사용할 수 없게 함
+     */
+    public void revoke() {
+        this.revokedAt = LocalDateTime.now();
+    }
+
+    // 사용 가능한 토큰인지 검증 (폐기되지 않았고, 만료 시간도 지나지 않음)
+    public boolean isValid() {
+        return revokedAt == null && expiredAt.isAfter(LocalDateTime.now());
+    }
+
+    // 정적 팩토리 메서드
+    // static 메서드를 이용해 객체를 생성하는 방식
+    // 생성자를 직접 호출하지 않고, 의미 있는 이름을 가진 static 메서드를 통해 객체 생성
+    public static RefreshToken create(User user, String tokenHash, LocalDateTime expiredAt) {
+        RefreshToken refreshToken = new RefreshToken();
+
+        refreshToken.user = user;
+        refreshToken.tokenHash = tokenHash;
+        refreshToken.expiredAt = expiredAt;
+
+        return refreshToken;
+    }
+
+}

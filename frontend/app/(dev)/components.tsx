@@ -1,8 +1,8 @@
 import Button from "@/components/common/Button";
-import ChatInput from "@/components/common/chat/ChatInput";
-import ChatDrawer from "@/components/common/chat/ChatDrawer";
-import ChatHeader from "@/components/common/chat/ChatHeader";
-import ChatBubble from "@/components/common/chat/ChatBubble";
+import ChatInput from "@/components/chat/ChatInput";
+import ChatDrawer from "@/components/chat/ChatDrawer";
+import ChatHeader from "@/components/chat/ChatHeader";
+import ChatBubble from "@/components/chat/ChatBubble";
 import IconButton from "@/components/common/IconButton";
 import LanguageCard from "@/components/common/LanguageCard";
 import Spinner from "@/components/common/Spinner";
@@ -38,6 +38,11 @@ export default function ComponentsGallery() {
   const handleChatHistory = () => {
     setDrawerVisible(false);
     Alert.alert("대화 내역", "이전 대화로 이동합니다.");
+  };
+
+  const handleSetting = () => {
+    setDrawerVisible(false);
+    Alert.alert("설정", "설정 화면이 열립니다.");
   };
 
   return (
@@ -509,6 +514,7 @@ export default function ComponentsGallery() {
         onNewChat={handleNewChat}
         onLanguageChange={handleLanguageChange}
         onChatHistory={handleChatHistory}
+        onSettings={handleSetting}
       />
     </ScrollView>
   );

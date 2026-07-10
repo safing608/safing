@@ -39,6 +39,8 @@ dependencies {
 	testCompileOnly 'org.projectlombok:lombok'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	testAnnotationProcessor 'org.projectlombok:lombok'
+	implementation 'com.google.api-client:google-api-client:2.7.2'
+	implementation 'com.google.http-client:google-http-client-gson:1.45.0'
 }
 
 tasks.named('test') {

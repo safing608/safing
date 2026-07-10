@@ -1,5 +1,5 @@
-import ChatBubble from "@/components/common/chat/ChatBubble";
-import ChatInput from "@/components/common/chat/ChatInput";
+import ChatBubble from "@/components/chat/ChatBubble";
+import ChatInput from "@/components/chat/ChatInput";
 import { COLORS } from "@/constants/colors";
 import { SPACING } from "@/constants/sizes";
 import useKeyboard from "@/hooks/useKeyboard";
