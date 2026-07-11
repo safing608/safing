@@ -11,7 +11,7 @@ class ChatRequest(BaseModel):
 
     message: str = Field(..., min_length=1)
     target_language: str = Field(..., alias="targetLanguage")
-    session_id: str | None = Field(default=None, alias="sessionId")
+    session_id: int | None = Field(default=None, alias="sessionId")
 
     @field_validator("target_language")
     @classmethod
@@ -38,11 +38,12 @@ class SafetyStep(BaseModel):
 class SafetyChatState(BaseModel):
     message: str
     target_language: str
-    session_id: str | None = None
+    session_id: int | None = None
+    title: str | None = None
     source_language: str | None = None
     normalized_message: str | None = None
     risk_classification: RiskClassification | None = None
     safety_steps: list[SafetyStep] = Field(default_factory=list)
     final_answer: str | None = None
     translated_answer: str | None = None
-    sources: list[RetrievedSource] = Field(default_factory=list)
+    sources: list[int] = Field(default_factory=list)
