@@ -51,7 +51,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // 인증 없이 접근 가능한 API
                         .requestMatchers(
-                                "/api/auth/google", // Google 로그인/회원가입
+                                "/api/auth/google", // Google 로그인/회원가입 진입
+                                "/api/auth/google/signup", // Google 회원가입 완료
                                 "/api/auth/reissue", // 토큰 재발급
                                 "/api/dev/**", // 개발용
                                 "/swagger-ui/**",

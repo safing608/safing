@@ -16,6 +16,8 @@ export default {
     ios: {
       supportsTablet: false,
       bundleIdentifier: "com.safing.app",
+      googleServicesFile:
+        process.env.GOOGLE_INFO_JSON ?? "./GoogleService-Info.plist",
     },
 
     android: {
@@ -45,7 +47,7 @@ export default {
         "expo-splash-screen",
         {
           backgroundColor: "#FAFAFA",
-          image: "./assets/logo/icon.png",
+          image: "./assets/logo/safing_not_title.png",
           resizeMode: "contain",
         },
       ],
@@ -64,6 +66,7 @@ export default {
           ],
         },
       ],
+      "expo-secure-store",
     ],
   },
 };

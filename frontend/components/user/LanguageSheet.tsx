@@ -1,17 +1,17 @@
-import LanguageCard from "@/components/common/LanguageCard";
+import { changeCountryCode } from "@/api/user";
 import FontText from "@/components/common/FontText";
+import LanguageCard from "@/components/common/LanguageCard";
 import { COLORS } from "@/constants/colors";
+import { CountryCode, LANGUAGE_OPTIONS } from "@/constants/i18n";
 import { FONT_SIZES, SPACING } from "@/constants/sizes";
+import { useModalAnimation } from "@/hooks/useModalAnimation";
 import { useUserStore } from "@/stores/userStore";
-import React, { useCallback, useEffect, useRef } from "react";
+import { t as i18nT } from "i18next";
+import React, { useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { Animated, Modal, Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useTranslation } from "react-i18next";
 import Toast from "react-native-toast-message";
-import { t as i18nT } from "i18next";
-import { CountryCode, LANGUAGE_OPTIONS } from "@/constants/i18n";
-
-const ANIMATION_DURATION = 260;
 
 interface LanguageSheetProps {
   visible: boolean;
@@ -22,58 +22,44 @@ function LanguageSheet({ visible, onClose }: LanguageSheetProps) {
   const { bottom } = useSafeAreaInsets();
   const { t } = useTranslation();
   const language = useUserStore((state) => state.language);
-  const hasSetLanguage = useUserStore((state) => state.hasSetLanguage);
   const setLanguage = useUserStore((state) => state.setLanguage);
 
-  const overlayOpacity = useRef(new Animated.Value(0)).current;
-  const sheetTranslateY = useRef(new Animated.Value(600)).current;
-
-  // 모달 애니메이션
-  useEffect(() => {
-    if (visible) {
-      Animated.parallel([
-        Animated.timing(overlayOpacity, {
-          toValue: 1,
-          duration: ANIMATION_DURATION,
-          useNativeDriver: true,
-        }),
-        Animated.timing(sheetTranslateY, {
-          toValue: 0,
-          duration: ANIMATION_DURATION,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    } else {
-      Animated.parallel([
-        Animated.timing(overlayOpacity, {
-          toValue: 0,
-          duration: ANIMATION_DURATION,
-          useNativeDriver: true,
-        }),
-        Animated.timing(sheetTranslateY, {
-          toValue: 600,
-          duration: ANIMATION_DURATION,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    }
-  }, [visible, overlayOpacity, sheetTranslateY]);
+  const {overlayOpacity, sheetTranslateY, animationDurationOut } =
+    useModalAnimation({
+      visible,
+    });
 
   // 언어 선택 시 언어 설정
   const handleSelect = useCallback(
-    (countryCode: CountryCode) => {
-      setLanguage(countryCode);
-      onClose();
-      setTimeout(() => {
+    async (languageCode: CountryCode) => {
+      try {
+        // 이미 선택된 언어면 아무 동작하지 않음
+        if (languageCode === language) {
+          return;
+        }
+        
+        await changeCountryCode({ countryCode: languageCode });
+
+        setLanguage(languageCode);
+        onClose();
+        
+        // 언어 변경 완료 토스트
+        setTimeout(() => {
+          Toast.show({
+            type: "success",
+            text1: i18nT("language.changed"),
+          });
+        }, animationDurationOut + 50);
+        
+      } catch (error) {
+        onClose();
         Toast.show({
-          type: "success",
-          text1: i18nT("language.changed"),
-          position: "top",
-          visibilityTime: 2000,
+          type: "error",
+          text1: t("error.common_error"),
         });
-      }, 300);
+      }
     },
-    [setLanguage, onClose],
+    [language, setLanguage, onClose, animationDurationOut, t],
   );
 
   return (
@@ -114,7 +100,7 @@ function LanguageSheet({ visible, onClose }: LanguageSheetProps) {
               key={countryCode}
               countryCode={countryCode}
               languageName={languageName}
-              isSelected={hasSetLanguage && language === countryCode}
+              isSelected={language === countryCode}
               onPress={() => handleSelect(countryCode)}
             />
           ))}
