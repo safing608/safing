@@ -3,18 +3,22 @@ package com.safing.backend.chat.controller;
 import com.safing.backend.auth.security.AuthUser;
 import com.safing.backend.chat.dto.request.CreateChatRequest;
 import com.safing.backend.chat.dto.request.SendChatMessageRequest;
+import com.safing.backend.chat.dto.response.ChatListResponse;
 import com.safing.backend.chat.dto.response.CreateChatResponse;
 import com.safing.backend.chat.dto.response.SendChatMessageResponse;
 import com.safing.backend.chat.service.ChatService;
 import com.safing.backend.chat.service.ChatStreamService;
 import com.safing.backend.common.dto.ApiResponse;
 import jakarta.validation.Valid;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/chats")
@@ -67,5 +71,21 @@ public class ChatController {
     ){
 
         return chatStreamService.streamAnswer(authUser.userId(), sessionId, messageId);
+    }
+
+    /**
+     * 대화 목록 조회 API
+     */
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<ChatListResponse>>> getChatList(@AuthenticationPrincipal AuthUser authUser){
+
+        List<ChatListResponse> response = chatService.getChatList(authUser.userId());
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "대화 목록 조회에 성공했습니다.",
+                        response
+                )
+        );
     }
 }

@@ -1,5 +1,6 @@
 package com.safing.backend.chat.service;
 
+import com.safing.backend.chat.dto.response.ChatListResponse;
 import com.safing.backend.chat.dto.response.CreateChatResponse;
 import com.safing.backend.chat.dto.response.SendChatMessageResponse;
 import com.safing.backend.chat.entity.ChatMessage;
@@ -15,6 +16,8 @@ import com.safing.backend.user.repository.UserRepository;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -79,5 +82,21 @@ public class ChatService {
 
         // 5. 응답 반환
         return new SendChatMessageResponse(assistantMessage.getMessageId());
+    }
+
+    /**
+     * 대화 목록 조회
+     */
+    @Transactional(readOnly = true)
+    public List<ChatListResponse> getChatList(Long userId){
+
+        return chatSessionRepository
+                .findAllByUser_UserIdAndDeletedFalseOrderByUpdatedAtDesc(userId)
+                .stream()
+                .map(chatSession -> new ChatListResponse(
+                        chatSession.getSessionId(),
+                        chatSession.getTitle()
+                ))
+                .toList();
     }
 }
