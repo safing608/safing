@@ -5,7 +5,6 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -36,7 +35,7 @@ public class ChatSession {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at")
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
     /**
@@ -54,7 +53,7 @@ public class ChatSession {
     }
 
     /**
-     * 대화방 제목 update
+     * 제목이 없는 경우 대화방 제목 설정
      */
     public void updateTitleIfAbsent(String title) {
         if (this.title == null || this.title.isBlank()) {
@@ -64,19 +63,21 @@ public class ChatSession {
     }
 
     /**
-     * 대화방 업데이트여부 update
+     * 대화방 최근 활동 시각 갱신
      */
-    public void updateUpdatedAt(){
+    public void touch(){
         this.updatedAt = LocalDateTime.now();
     }
 
 
     /**
-     * 대화방 삭제 처리
+     * 대화방 소프트 삭제
      */
-    public void softDelete() {
+    public void delete() {
+        LocalDateTime now = LocalDateTime.now();
+
         this.deleted = true;
-        this.deletedAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+        this.deletedAt = now;
+        this.updatedAt = now;
     }
 }

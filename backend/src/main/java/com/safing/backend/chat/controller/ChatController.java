@@ -88,4 +88,22 @@ public class ChatController {
                 )
         );
     }
+
+    /**
+     * 대화방 삭제 API
+     */
+    @DeleteMapping("/{sessionId}")
+    public ResponseEntity<ApiResponse<Void>> deleteChatSession(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long sessionId
+    ){
+        chatService.deleteChatSession(authUser.userId(), sessionId);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "대화방이 삭제되었습니다.",
+                        null
+                )
+        );
+    }
 }

@@ -78,7 +78,7 @@ public class ChatService {
         chatMessageRepository.save(assistantMessage);
 
         // 4. session.updatedAt 갱신
-        chatSession.updateUpdatedAt();
+        chatSession.touch();
 
         // 5. 응답 반환
         return new SendChatMessageResponse(assistantMessage.getMessageId());
@@ -98,5 +98,18 @@ public class ChatService {
                         chatSession.getTitle()
                 ))
                 .toList();
+    }
+
+    /**
+     * 대화방 삭제
+     */
+    @Transactional
+    public void deleteChatSession(Long userId, Long sessionId){
+        ChatSession chatSession = chatSessionRepository
+                .findBySessionIdAndUser_UserIdAndDeletedFalse(sessionId, userId)
+                .orElseThrow(() ->
+                        new CustomException(ResponseCode.SESSION_NOT_FOUND)
+                );
+        chatSession.delete();
     }
 }
