@@ -43,7 +43,11 @@ class SafetyChatWorkflow:
 
         yield format_sse(
             "final_answer",
-            FinalAnswerEvent(answer=state.final_answer or "", sources=state.sources),
+            FinalAnswerEvent(
+                title=state.title or self._build_title(state),
+                answer=state.final_answer or "",
+                sources=state.sources,
+            ),
         )
         yield format_sse("done", DoneEvent())
 
@@ -52,6 +56,7 @@ class SafetyChatWorkflow:
             message=request.message,
             target_language=request.target_language,
             session_id=request.session_id,
+            title=self._build_title_from_message(request.message),
             source_language="ko",
             normalized_message=request.message,
         )
@@ -70,6 +75,17 @@ class SafetyChatWorkflow:
         )
         state.sources = []
         return state
+
+    def _build_title(self, state: SafetyChatState) -> str:
+        return self._build_title_from_message(state.message)
+
+    def _build_title_from_message(self, message: str) -> str:
+        normalized = " ".join(message.split())
+        if not normalized:
+            return "새 안전 상담"
+        if len(normalized) <= 30:
+            return normalized
+        return f"{normalized[:30]}..."
 
 
 @lru_cache
