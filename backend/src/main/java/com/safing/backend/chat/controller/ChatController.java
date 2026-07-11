@@ -3,6 +3,7 @@ package com.safing.backend.chat.controller;
 import com.safing.backend.auth.security.AuthUser;
 import com.safing.backend.chat.dto.request.CreateChatRequest;
 import com.safing.backend.chat.dto.request.SendChatMessageRequest;
+import com.safing.backend.chat.dto.response.ChatDetailResponse;
 import com.safing.backend.chat.dto.response.ChatListResponse;
 import com.safing.backend.chat.dto.response.CreateChatResponse;
 import com.safing.backend.chat.dto.response.SendChatMessageResponse;
@@ -12,12 +13,14 @@ import com.safing.backend.common.dto.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.apache.coyote.Response;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -84,6 +87,24 @@ public class ChatController {
         return ResponseEntity.ok(
                 ApiResponse.success(
                         "대화 목록 조회에 성공했습니다.",
+                        response
+                )
+        );
+    }
+
+    /**
+     * 대화 상세 조회 API
+     */
+    @GetMapping("/{sessionId}")
+    public ResponseEntity<ApiResponse<List<ChatDetailResponse>>> getChatDetail(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long sessionId
+    ){
+        List<ChatDetailResponse> response = chatService.getChatDetail(authUser.userId(), sessionId);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "대화 상세 조회에 성공했습니다.",
                         response
                 )
         );

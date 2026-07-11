@@ -1,10 +1,12 @@
 package com.safing.backend.chat.service;
 
+import com.safing.backend.chat.dto.response.ChatDetailResponse;
 import com.safing.backend.chat.dto.response.ChatListResponse;
 import com.safing.backend.chat.dto.response.CreateChatResponse;
 import com.safing.backend.chat.dto.response.SendChatMessageResponse;
 import com.safing.backend.chat.entity.ChatMessage;
 import com.safing.backend.chat.entity.ChatSession;
+import com.safing.backend.chat.enumtype.ChatMessageRole;
 import com.safing.backend.chat.repository.ChatMessageRepository;
 import com.safing.backend.chat.repository.ChatSessionRepository;
 import com.safing.backend.chat.repository.MessageSourceRepository;
@@ -17,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -98,6 +101,50 @@ public class ChatService {
                         chatSession.getTitle()
                 ))
                 .toList();
+    }
+
+    /**
+     * 대화 상세 조회
+     */
+    @Transactional(readOnly = true)
+    public List<ChatDetailResponse> getChatDetail(Long userId, Long sessionId){
+
+        // 1. 해당 사용자의 대화방인지, 삭제되지 않았는지 검증
+        chatSessionRepository
+                .findBySessionIdAndUser_UserIdAndDeletedFalse(sessionId, userId)
+                .orElseThrow(() -> new CustomException(ResponseCode.SESSION_NOT_FOUND));
+
+        // 2. 검증된 대화방의 모든 대화 조회
+        return chatMessageRepository
+                .findAllBySession_SessionIdOrderByCreatedAtAsc(sessionId)
+                .stream()
+                .map( message -> new ChatDetailResponse(
+                        message.getMessageId(),
+                        message.getStatus(),
+                        message.getRole(),
+                        message.getContent(),
+                        resolveRiskTypeName(message)
+                ))
+                .toList();
+    }
+
+    /**
+     * 대화 상세 조회 시 위험유형명 국가별 매핑
+     */
+    private String resolveRiskTypeName(ChatMessage message){
+
+        // USER 메시지는 위험 유형을 갖지 않음
+        if (message.getRole() == ChatMessageRole.USER) {
+            return null;
+        }
+
+        // 답변 생성 중이거나 실패한 경우 위험 유형이 없을 수 있음
+        if (message.getRiskType() == null || message.getCountryCode() == null) {
+            return null;
+        }
+
+        return message.getRiskType()
+                .getNameByCountryCode(message.getCountryCode());
     }
 
     /**

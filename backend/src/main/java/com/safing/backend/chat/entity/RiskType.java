@@ -1,5 +1,6 @@
 package com.safing.backend.chat.entity;
 
+import com.safing.backend.common.enumtype.CountryCode;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -38,4 +39,15 @@ public class RiskType {
 
     @Column(name = "risk_type_name_vi", nullable = false, length = 100)
     private String riskTypeNameVi;
+
+    // 위험유형 국가별 매핑
+    public String getNameByCountryCode(CountryCode countryCode) {
+        return switch (countryCode){
+            case KR -> riskTypeNameKo;
+            case US -> riskTypeNameEn;
+            case KH -> riskTypeNameKm;
+            case VN -> riskTypeNameVi;
+            case NP -> riskTypeNameNe;
+        };
+    }
 }
