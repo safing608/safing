@@ -1,4 +1,4 @@
-package com.safing.backend.chat.dto.sse;
+package com.safing.backend.chat.dto.sse.frontend;
 
 public record ErrorEventData(
         String code,

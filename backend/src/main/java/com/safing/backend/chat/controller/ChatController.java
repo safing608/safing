@@ -13,6 +13,7 @@ import com.safing.backend.common.dto.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.coyote.Response;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +27,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/chats")
 @RequiredArgsConstructor
+@Slf4j
 public class ChatController {
 
     private final ChatService chatService;
@@ -72,6 +74,9 @@ public class ChatController {
             @PathVariable Long sessionId,
             @PathVariable Long messageId
     ){
+
+        log.info("streamAnswer 컨트롤러 진입. userId={}, sessionId={}, messageId={}",
+                authUser.userId(), sessionId, messageId);
 
         return chatStreamService.streamAnswer(authUser.userId(), sessionId, messageId);
     }

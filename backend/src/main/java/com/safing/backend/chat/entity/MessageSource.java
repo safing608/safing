@@ -16,6 +16,9 @@ public class MessageSource {
     @Column(name = "source_id")
     private Long sourceId;
 
+    @Column(name = "ai_source_id", nullable = false)
+    private Long aiSourceId;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "message_id", nullable = false)
     private ChatMessage message;
@@ -23,21 +26,23 @@ public class MessageSource {
     @Column(name = "document_name", nullable = false, length = 500)
     private String documentName;
 
-    @Column(name = "chunk_id", nullable = false, length = 255)
-    private String chunkId;
+    @Column(name = "chunk_id", nullable = false)
+    private Long chunkId;
 
     /**
      * 메시지 출처 생성
      */
     public static MessageSource create(
             ChatMessage message,
-            String documentName,
-            String chunkId
+            Long aiSourceId,
+            Long chunkId,
+            String documentName
     ) {
         MessageSource source = new MessageSource();
         source.message = message;
-        source.documentName = documentName;
+        source.aiSourceId = aiSourceId;
         source.chunkId = chunkId;
+        source.documentName = documentName;
         return source;
     }
 }
