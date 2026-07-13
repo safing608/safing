@@ -14,30 +14,41 @@ interface OnboardingScreenProps {}
 
 // 해당 경로는 SPLASH SCREEN
 function OnboardingScreen({}: OnboardingScreenProps) {
-  const { refreshToken } = useAuthStore.getState();
-
   useEffect(() => {
     SplashScreen.hideAsync();
   }, []);
 
+  // 첫 진입 시 토큰 갱신으로 토큰 유효성 검사
   useEffect(() => {
     const initializeApp = async () => {
       try {
+        const { restoreTokens, updateTokens } = useAuthStore.getState();
+
+        // SecureStore 복원이 끝난 뒤에만 reissue 호출
+        await restoreTokens();
+
+        // 토큰 확인
+        const { refreshToken } = useAuthStore.getState();
+        if (!refreshToken) {
+          router.replace("/login");
+          return;
+        }
+
         // 토큰 유효성 검증
-        await reissueToken(refreshToken ?? "");
+        const data = await reissueToken(refreshToken);
+        await updateTokens(data.accessToken, data.refreshToken);
 
         // 스플래시 화면 최소 표시 시간 (1.2초)
         await new Promise((resolve) => setTimeout(resolve, 1200));
 
         router.replace("/chat");
       } catch (error) {
-        dev.error("토큰 갱신 실패:", error);
-        router.replace("/login");
+        await useAuthStore.getState().logout("/login");
       }
     };
 
     initializeApp();
-  }, [refreshToken]);
+  }, []);
 
   const { width } = useWindowDimensions();
   // SVG 원본 비율: 694:778 (가로:세로)

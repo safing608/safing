@@ -5,6 +5,7 @@ import AuthSheet from "@/components/user/AuthSheet";
 import LanguageSheet from "@/components/user/LanguageSheet";
 import { COLORS } from "@/constants/colors";
 import { SPACING } from "@/constants/sizes";
+import { dev } from "@/utils/dev";
 import { Stack, usePathname, useRouter } from "expo-router";
 import React, { useState } from "react";
 import { Alert, StyleSheet, View } from "react-native";
@@ -29,11 +30,13 @@ export default function MainLayout() {
 
   // 새로운 대화 클릭 시 새로운 대화 화면으로 이동
   const handleNewChat = () => {
+    setDrawerVisible(false);
     // 이미 chat 화면이면 반응 x
     if (pathname === "/chat") {
+      dev.log(pathname);
+      dev.log("이미 chat 화면이면 반응 x");
       return;
     }
-    setDrawerVisible(false);
     router.push("/chat");
   };
 

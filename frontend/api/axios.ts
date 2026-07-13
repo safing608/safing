@@ -35,10 +35,11 @@ axiosInstance.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // 로그인/가입 관련 엔드포인트는 토큰 갱신 제외
+    // 로그인/가입 관련 엔드포인트와 첫 진입 시 토큰 갱신 제외
     const isAuthEndpoint =
       originalRequest.url?.includes("/api/auth/google") ||
-      originalRequest.url?.includes("/api/auth/google/signup");
+      originalRequest.url?.includes("/api/auth/google/signup") ||
+      originalRequest.url?.includes("/api/auth/reissue");
 
     // 401 또는 403 에러이고 아직 재시도하지 않은 경우 (단, 인증 엔드포인트 제외)
     if (
@@ -55,7 +56,7 @@ axiosInstance.interceptors.response.use(
       });
 
       try {
-        const { refreshToken, updateAccessToken, logout } =
+        const { refreshToken, updateTokens, logout } =
           useAuthStore.getState();
 
           dev.log("refreshToken", refreshToken);
@@ -87,7 +88,7 @@ axiosInstance.interceptors.response.use(
         dev.log("새로운 access token", newAccessToken ? "발급 완료" : "실패");
 
         // 새로운 access token을 저장
-        await updateAccessToken(newAccessToken);
+        await updateTokens(newAccessToken, refreshToken);
 
         // 원래 요청에 새 토큰 적용 (headers 객체 보장)
         originalRequest.headers = originalRequest.headers || {};

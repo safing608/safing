@@ -27,7 +27,7 @@ interface AuthState {
     countryCode: string,
   ) => Promise<void>;
   logout: (redirectTo?: string) => Promise<void>;
-  updateAccessToken: (accessToken: string) => Promise<void>;
+  updateTokens: (accessToken: string, refreshToken: string) => Promise<void>;
   restoreTokens: () => Promise<void>;
 }
 
@@ -74,7 +74,7 @@ export const useAuthStore = create<AuthState>()(
         useUserStore.getState().resetUser();
 
         // 캐시 초기화
-        queryClient.clear()
+        queryClient.clear();
 
         set({
           accessToken: null,
@@ -89,10 +89,11 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      //updateAccessToken action
-      updateAccessToken: async (accessToken: string) => {
+      // 토큰 갱신
+      updateTokens: async (accessToken: string, refreshToken: string) => {
         await saveSecureStore("accessToken", accessToken);
-        set({ accessToken });
+        await saveSecureStore("refreshToken", refreshToken);
+        set({ accessToken, refreshToken });
       },
 
       // SecureStore에서 토큰 복원
@@ -106,10 +107,15 @@ export const useAuthStore = create<AuthState>()(
               accessToken,
               refreshToken,
               isAuthenticated: true,
+              isHydrated: true,
             });
+            return;
           }
+
+          set({ isHydrated: true });
         } catch (error) {
           dev.error("토큰 복원 실패:", error);
+          set({ isHydrated: true });
         }
       },
     }),
