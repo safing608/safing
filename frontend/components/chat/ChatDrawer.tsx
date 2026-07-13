@@ -41,6 +41,7 @@ function ChatDrawer({
 
   const mockChatItemData = mockChatItem;
 
+
   return (
     <Modal
       visible={visible}
@@ -123,6 +124,7 @@ function ChatDrawer({
               <View style={styles.divider} />
 
               {/* 대화 목록 */}
+              {mockChatItemData.length > 0 && (
               <View style={styles.historySection}>
                 <View style={styles.historyItemHeader}>
                   <MaterialIcons
@@ -159,6 +161,7 @@ function ChatDrawer({
                   </Pressable>
                 ))}
               </View>
+                 )}
             </ScrollView>
           </SafeAreaView>
         </View>

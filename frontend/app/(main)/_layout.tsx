@@ -5,7 +5,7 @@ import AuthSheet from "@/components/user/AuthSheet";
 import LanguageSheet from "@/components/user/LanguageSheet";
 import { COLORS } from "@/constants/colors";
 import { SPACING } from "@/constants/sizes";
-import { Stack, useRouter } from "expo-router";
+import { Stack, usePathname, useRouter } from "expo-router";
 import React, { useState } from "react";
 import { Alert, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -15,6 +15,7 @@ export default function MainLayout() {
   const [languageSheetVisible, setLanguageSheetVisible] = useState(false);
   const [authSheetVisible, setAuthSheetVisible] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
 
   // 채팅 드로어 열기
   const handleMenuPress = () => {
@@ -28,6 +29,10 @@ export default function MainLayout() {
 
   // 새로운 대화 클릭 시 새로운 대화 화면으로 이동
   const handleNewChat = () => {
+    // 이미 chat 화면이면 반응 x
+    if (pathname === "/chat") {
+      return;
+    }
     setDrawerVisible(false);
     router.push("/chat");
   };

@@ -11,6 +11,7 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { useUserStore } from "./userStore";
 import { CountryCode, DEFAULT_LANGUAGE } from "@/constants/i18n";
+import queryClient from "@/api/client";
 
 interface AuthState {
   accessToken: string | null;
@@ -71,6 +72,9 @@ export const useAuthStore = create<AuthState>()(
 
         // 언어설정 초기화
         useUserStore.getState().resetUser();
+
+        // 캐시 초기화
+        queryClient.clear()
 
         set({
           accessToken: null,

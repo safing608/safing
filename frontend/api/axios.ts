@@ -1,7 +1,6 @@
 import { useAuthStore } from "@/stores/authStore";
 import { dev } from "@/utils/dev";
 import axios, { create } from "axios";
-import { reissueToken } from "./auth";
 
 // API 클라이언트 생성
 const axiosInstance = create({
