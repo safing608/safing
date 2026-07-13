@@ -1,0 +1,152 @@
+package com.safing.backend.chat.controller;
+
+import com.safing.backend.auth.security.AuthUser;
+import com.safing.backend.chat.dto.request.CreateChatRequest;
+import com.safing.backend.chat.dto.request.SendChatMessageRequest;
+import com.safing.backend.chat.dto.response.*;
+import com.safing.backend.chat.service.ChatService;
+import com.safing.backend.chat.service.ChatStreamService;
+import com.safing.backend.common.dto.ApiResponse;
+import jakarta.validation.Valid;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.coyote.Response;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+
+import java.util.ArrayList;
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/chats")
+@RequiredArgsConstructor
+@Slf4j
+public class ChatController {
+
+    private final ChatService chatService;
+    private final ChatStreamService chatStreamService;
+
+    /**
+     * 새 채팅방 생성 API
+     */
+    @PostMapping
+    public ResponseEntity<ApiResponse<CreateChatResponse>> createChat(
+            @AuthenticationPrincipal AuthUser authUser,
+            @Valid @RequestBody CreateChatRequest request
+    ){
+        CreateChatResponse response = chatService.createChat(authUser.userId(), request.content());
+        return ResponseEntity.ok(
+                ApiResponse.success("질문이 접수되었습니다.", response)
+        );
+    }
+
+    /**
+     * 기존 대화에 질문 전송 API
+     */
+    @PostMapping("/{sessionId}/messages")
+    public ResponseEntity<ApiResponse<SendChatMessageResponse>> sendChatMessage (
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long sessionId,
+            @Valid @RequestBody SendChatMessageRequest request
+    ){
+        SendChatMessageResponse response = chatService.sendChatMessage(authUser.userId(), sessionId, request.content());
+        return ResponseEntity.ok(
+                ApiResponse.success("질문이 접수되었습니다.", response)
+        );
+    }
+
+    /**
+     * AI 답변 스트림 조회 API
+     */
+    @GetMapping(
+            value = "/{sessionId}/messages/{messageId}/stream",
+            produces = MediaType.TEXT_EVENT_STREAM_VALUE // API 응답 형식 명시 (SSE API니까 이벤트 스트림 응답)
+    )
+    public SseEmitter streamAnswer(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long sessionId,
+            @PathVariable Long messageId
+    ){
+
+        log.info("streamAnswer 컨트롤러 진입. userId={}, sessionId={}, messageId={}",
+                authUser.userId(), sessionId, messageId);
+
+        return chatStreamService.streamAnswer(authUser.userId(), sessionId, messageId);
+    }
+
+    /**
+     * 대화 목록 조회 API
+     */
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<ChatListResponse>>> getChatList(@AuthenticationPrincipal AuthUser authUser){
+
+        List<ChatListResponse> response = chatService.getChatList(authUser.userId());
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "대화 목록 조회에 성공했습니다.",
+                        response
+                )
+        );
+    }
+
+    /**
+     * 대화 상세 조회 API
+     */
+    @GetMapping("/{sessionId}")
+    public ResponseEntity<ApiResponse<List<ChatDetailResponse>>> getChatDetail(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long sessionId
+    ){
+        List<ChatDetailResponse> response = chatService.getChatDetail(authUser.userId(), sessionId);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "대화 상세 조회에 성공했습니다.",
+                        response
+                )
+        );
+    }
+
+    /**
+     * 대화방 삭제 API
+     */
+    @DeleteMapping("/{sessionId}")
+    public ResponseEntity<ApiResponse<Void>> deleteChatSession(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long sessionId
+    ){
+        chatService.deleteChatSession(authUser.userId(), sessionId);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "대화방이 삭제되었습니다.",
+                        null
+                )
+        );
+    }
+
+    /**
+     * 질문 재전송 API
+     */
+    @PostMapping("/{sessionId}/messages/{messageId}/retry")
+    public ResponseEntity<ApiResponse<RetryMessageResponse>> retryMessage(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long sessionId,
+            @PathVariable Long messageId
+    ){
+        RetryMessageResponse response =
+                chatService.retryMessage(authUser.userId(), sessionId, messageId);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "AI 답변 재시도가 요청되었습니다.",
+                        response
+                )
+        );
+    }
+}

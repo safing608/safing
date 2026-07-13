@@ -1,5 +1,7 @@
 package com.safing.backend.config;
 
+import com.safing.backend.auth.security.CustomAccessDeniedHandler;
+import com.safing.backend.auth.security.CustomAuthenticationEntryPoint;
 import com.safing.backend.auth.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -17,6 +19,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+    private final CustomAccessDeniedHandler customAccessDeniedHandler;
 
     /**
      * Spring Security의 필터 체인을 설정하는 Bean
@@ -37,6 +41,12 @@ public class SecurityConfig {
                 // Spring Security의 기본 로그아웃 대신 커스텀 로그아웃 사용
                 .logout(AbstractHttpConfigurer::disable)
 
+                // 인증/인가 실패 시 공통 JSON 응답 처리
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(customAuthenticationEntryPoint)
+                        .accessDeniedHandler(customAccessDeniedHandler)
+                )
+
                 // API별 접근 권한 설정
                 .authorizeHttpRequests(auth -> auth
                         // 인증 없이 접근 가능한 API
@@ -44,6 +54,7 @@ public class SecurityConfig {
                                 "/api/auth/google", // Google 로그인/회원가입 진입
                                 "/api/auth/google/signup", // Google 회원가입 완료
                                 "/api/auth/reissue", // 토큰 재발급
+                                "/api/dev/**", // 개발용
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**"
                         ).permitAll()

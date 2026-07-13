@@ -8,11 +8,13 @@ import com.safing.backend.auth.dto.response.GoogleAuthResponse;
 import com.safing.backend.auth.dto.response.GoogleAuthStatus;
 import com.safing.backend.auth.dto.response.ReissueResponse;
 import com.safing.backend.auth.dto.response.TokenResponse;
+import com.safing.backend.auth.security.AuthUser;
 import com.safing.backend.auth.service.AuthService;
 import com.safing.backend.common.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -59,12 +61,10 @@ public class AuthController {
      */
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout(
-        Authentication authentication,
+        @AuthenticationPrincipal AuthUser authUser,
         @Valid @RequestBody LogoutRequest request
     ){
-        Long userId = Long.valueOf(authentication.getName());
-
-        authService.logout(userId, request.refreshToken());
+        authService.logout(authUser.userId(), request.refreshToken());
 
         return ResponseEntity.ok(
                 ApiResponse.success("로그아웃에 성공했습니다.",null)
