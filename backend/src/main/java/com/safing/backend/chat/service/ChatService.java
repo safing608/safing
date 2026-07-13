@@ -1,9 +1,6 @@
 package com.safing.backend.chat.service;
 
-import com.safing.backend.chat.dto.response.ChatDetailResponse;
-import com.safing.backend.chat.dto.response.ChatListResponse;
-import com.safing.backend.chat.dto.response.CreateChatResponse;
-import com.safing.backend.chat.dto.response.SendChatMessageResponse;
+import com.safing.backend.chat.dto.response.*;
 import com.safing.backend.chat.entity.ChatMessage;
 import com.safing.backend.chat.entity.ChatSession;
 import com.safing.backend.chat.enumtype.ChatMessageRole;
@@ -158,5 +155,21 @@ public class ChatService {
                         new CustomException(ResponseCode.SESSION_NOT_FOUND)
                 );
         chatSession.delete();
+    }
+
+    /**
+     * 질문 재전송
+     */
+    @Transactional
+    public RetryMessageResponse retryMessage(Long userId, Long sessionId, Long messageId){
+        ChatMessage message = chatMessageRepository
+                .findRetryTarget(messageId, sessionId, userId)
+                .orElseThrow(() ->
+                        new CustomException(ResponseCode.MESSAGE_NOT_FOUND)
+                );
+
+        message.retryAssistantAnswer();
+
+        return new RetryMessageResponse(message.getMessageId());
     }
 }

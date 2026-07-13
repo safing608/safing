@@ -3,6 +3,8 @@ package com.safing.backend.chat.entity;
 import com.safing.backend.chat.enumtype.ChatMessageRole;
 import com.safing.backend.chat.enumtype.ChatMessageStatus;
 import com.safing.backend.common.enumtype.CountryCode;
+import com.safing.backend.common.enumtype.ResponseCode;
+import com.safing.backend.common.exception.CustomException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -119,6 +121,16 @@ public class ChatMessage {
         }
 
         this.status = ChatMessageStatus.FAILED;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void retryAssistantAnswer() {
+        if (role != ChatMessageRole.ASSISTANT
+                || status != ChatMessageStatus.FAILED) {
+            throw new CustomException(ResponseCode.MESSAGE_NOT_RETRYABLE);
+        }
+
+        this.status = ChatMessageStatus.PROCESSING;
         this.updatedAt = LocalDateTime.now();
     }
 }

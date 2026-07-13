@@ -3,10 +3,7 @@ package com.safing.backend.chat.controller;
 import com.safing.backend.auth.security.AuthUser;
 import com.safing.backend.chat.dto.request.CreateChatRequest;
 import com.safing.backend.chat.dto.request.SendChatMessageRequest;
-import com.safing.backend.chat.dto.response.ChatDetailResponse;
-import com.safing.backend.chat.dto.response.ChatListResponse;
-import com.safing.backend.chat.dto.response.CreateChatResponse;
-import com.safing.backend.chat.dto.response.SendChatMessageResponse;
+import com.safing.backend.chat.dto.response.*;
 import com.safing.backend.chat.service.ChatService;
 import com.safing.backend.chat.service.ChatStreamService;
 import com.safing.backend.common.dto.ApiResponse;
@@ -129,6 +126,26 @@ public class ChatController {
                 ApiResponse.success(
                         "대화방이 삭제되었습니다.",
                         null
+                )
+        );
+    }
+
+    /**
+     * 질문 재전송 API
+     */
+    @PostMapping("/{sessionId}/messages/{messageId}/retry")
+    public ResponseEntity<ApiResponse<RetryMessageResponse>> retryMessage(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long sessionId,
+            @PathVariable Long messageId
+    ){
+        RetryMessageResponse response =
+                chatService.retryMessage(authUser.userId(), sessionId, messageId);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "AI 답변 재시도가 요청되었습니다.",
+                        response
                 )
         );
     }
