@@ -24,10 +24,11 @@ class ChatRequest(BaseModel):
 
 
 class RetrievedSource(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
     source_id: int = Field(..., alias="sourceId")
-    title: str | None = None
-    page: int | None = None
-    provider: str | None = None
+    chunk_id: int | None = Field(default=None, alias="chunkId")
+    document_name: str | None = Field(default=None, alias="documentName")
 
 
 class SafetyStep(BaseModel):
@@ -46,4 +47,4 @@ class SafetyChatState(BaseModel):
     safety_steps: list[SafetyStep] = Field(default_factory=list)
     final_answer: str | None = None
     translated_answer: str | None = None
-    sources: list[int] = Field(default_factory=list)
+    sources: list[RetrievedSource] = Field(default_factory=list)
