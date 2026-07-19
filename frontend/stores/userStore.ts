@@ -5,6 +5,7 @@ import { createJSONStorage, persist } from "zustand/middleware";
 import { changeLanguage } from "i18next";
 import { dev } from "@/utils/dev";
 import { CountryCode, DEFAULT_LANGUAGE } from "@/constants/i18n";
+import { USER_STORAGE_KEY } from "@/constants/storeKeys";
 
 interface UserState {
   language: CountryCode;
@@ -36,14 +37,15 @@ export const useUserStore = create<UserState>()(
       },
     }),
     {
-      name: "user-storage",
+      name: USER_STORAGE_KEY,
       storage: createJSONStorage(() => AsyncStorage),
 
       // Hydration 완료 시 콜백 (i18n은 이미 _layout.tsx에서 초기화됨)
-      onRehydrateStorage: () => (state) => {
-        if (state) {
-          state._setHydrated(true);
+      onRehydrateStorage: () => (state, error) => {
+        if (error) {
+          dev.error(error);
         }
+        useUserStore.getState()._setHydrated(true);
       },
     },
   ),
