@@ -1,10 +1,11 @@
 import ChatBubble from "@/components/chat/ChatBubble";
-import ChatInput from "@/components/chat/ChatInput";
+import ChatInput, { ChatInputHandle } from "@/components/chat/ChatInput";
 import { COLORS } from "@/constants/colors";
 import { SPACING } from "@/constants/sizes";
+import { useGetChat, useSendQuestion } from "@/hooks/queries/useChat";
 import useKeyboard from "@/hooks/useKeyboard";
-import { mockChatContent } from "@/mock/chat";
-import React, { useEffect, useRef, useState } from "react";
+import { useLocalSearchParams } from "expo-router";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Animated,
   LayoutChangeEvent,
@@ -18,11 +19,29 @@ interface ChatRoomScreenProps {}
 
 function ChatRoomScreen({}: ChatRoomScreenProps) {
   const { isKeyboardVisible, keyboardHeight } = useKeyboard();
-  const mockChatContentData = mockChatContent;
 
   const [inputHeight, setInputHeight] = useState(0);
 
   const animatedBottom = useRef(new Animated.Value(0)).current;
+  const scrollViewRef = useRef<ScrollView>(null);
+  const chatInputRef = useRef<ChatInputHandle>(null);
+
+  const { id: sessionId } = useLocalSearchParams<{ id: string }>();
+  const { data: chat } = useGetChat(Number(sessionId));
+
+  const { mutate: sendQuestion, isPending } = useSendQuestion();
+
+  const scrollToBottom = useCallback((animated = true) => {
+    requestAnimationFrame(() => {
+      scrollViewRef.current?.scrollToEnd({ animated });
+    });
+  }, []);
+
+  // 메시지 추가/로드 시 맨 아래로
+  useEffect(() => {
+    if (!chat?.length) return;
+    scrollToBottom(true);
+  }, [chat?.length, scrollToBottom]);
 
   // 플랫폼별 입력창 bottom 위치 계산
   // iOS: keyboardWillShow로 미리 감지 → 애니메이션 duration 맞춰야 함
@@ -45,12 +64,26 @@ function ChatRoomScreen({}: ChatRoomScreenProps) {
     setInputHeight(e.nativeEvent.layout.height);
   };
 
+  // 기존 대화에 질문 전송
+  const handleSendQuestion = (content: string) => {
+    if (isPending) return;
+    sendQuestion(
+      { sessionId: Number(sessionId), content },
+      {
+        onSuccess: () => {
+          scrollToBottom(true);
+        },
+      },
+    );
+  };
+
   // 실제 측정된 inputHeight + 키보드 위치 = 정확한 paddingBottom
   const scrollPaddingBottom = inputHeight + targetBottomPosition + SPACING.XS;
 
   return (
     <View style={styles.container}>
       <ScrollView
+        ref={scrollViewRef}
         style={styles.scrollView}
         contentContainerStyle={[
           styles.chatContentContainer,
@@ -58,12 +91,13 @@ function ChatRoomScreen({}: ChatRoomScreenProps) {
         ]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
+        onContentSizeChange={() => scrollToBottom(false)}
       >
-        {mockChatContentData.map((item) => (
+        {chat?.map((item) => (
           <ChatBubble
-            key={item.id}
-            role={item.role as "user" | "assistant"}
-            text={item.text as string}
+            key={item.messageId}
+            role={item.role as "USER" | "ASSISTANT"}
+            text={item.content as string}
           />
         ))}
       </ScrollView>
@@ -73,7 +107,11 @@ function ChatRoomScreen({}: ChatRoomScreenProps) {
         style={[styles.chatInputContainer, { bottom: animatedBottom }]}
         onLayout={handleInputLayout}
       >
-        <ChatInput />
+        <ChatInput
+          ref={chatInputRef}
+          onSend={handleSendQuestion}
+          disabled={isPending}
+        />
         <View style={styles.bottomSpacer} />
       </Animated.View>
     </View>

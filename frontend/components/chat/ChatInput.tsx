@@ -1,34 +1,72 @@
-import { Ionicons } from "@expo/vector-icons";
-import React, { forwardRef, useState, useRef, useCallback } from "react";
-import {
-  StyleSheet,
-  TextInput,
-  View,
-  Pressable,
-  TextInputProps,
-} from "react-native";
 import { COLORS } from "@/constants/colors";
 import { SPACING } from "@/constants/sizes";
+import { Ionicons } from "@expo/vector-icons";
+import React, {
+  forwardRef,
+  useCallback,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
 import { useTranslation } from "react-i18next";
+import {
+  Pressable,
+  StyleSheet,
+  TextInput,
+  TextInputProps,
+  View,
+} from "react-native";
+
+export interface ChatInputHandle {
+  clear: () => void;
+  focus: () => void;
+}
 
 interface ChatInputProps extends TextInputProps {
   onSend?: (message: string) => void;
   maxLength?: number;
+  disabled?: boolean;
   // React Hook Form 연동을 위한 props
   onChangeText?: (text: string) => void;
   onBlur?: () => void;
   name?: string;
 }
 
-const ChatInput = forwardRef<TextInput, ChatInputProps>(
+const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
   (
-    { onSend, maxLength = 500, onChangeText, onBlur, name, ...textInputProps },
+    {
+      onSend,
+      maxLength = 500,
+      disabled = false,
+      onChangeText,
+      onBlur,
+      name,
+      ...textInputProps
+    },
     ref,
   ) => {
     // 버튼 표시/숨김을 위한 최소한의 상태만 관리
     const [hasText, setHasText] = useState(false);
     const { t } = useTranslation();
     const textRef = useRef("");
+    const inputRef = useRef<TextInput>(null);
+
+    // 입력 내용 초기화
+    const clear = useCallback(() => {
+      inputRef.current?.clear();
+      textRef.current = "";
+      setHasText(false);
+      onChangeText?.("");
+    }, [onChangeText]);
+
+    useImperativeHandle(
+      ref,
+      () => ({
+        clear,
+        focus: () => inputRef.current?.focus(),
+      }),
+      [clear],
+    );
 
     // 텍스트 변경 핸들러 - 재렌더링 최소화
     const handleChangeText = useCallback(
@@ -49,24 +87,19 @@ const ChatInput = forwardRef<TextInput, ChatInputProps>(
 
     // 전송 핸들러
     const handleSend = useCallback(() => {
+      if (disabled) return;
       const currentText = textRef.current.trim();
       if (currentText && onSend) {
         onSend(currentText);
-
-        // TextInput 직접 조작으로 재렌더링 없이 초기화
-        if (ref && "current" in ref && ref.current) {
-          ref.current.clear();
-          textRef.current = "";
-          setHasText(false);
-        }
+        clear();
       }
-    }, [onSend, ref]);
+    }, [onSend, clear, disabled]);
 
     return (
       <View style={styles.container}>
         <View style={styles.inputContainer}>
           <TextInput
-            ref={ref}
+            ref={inputRef}
             style={styles.input}
             placeholder={t("chat.input_placeholder")}
             placeholderTextColor={COLORS.MOEL_DARK_GRAY}
@@ -78,11 +111,16 @@ const ChatInput = forwardRef<TextInput, ChatInputProps>(
             autoCorrect={false}
             multiline
             maxLength={maxLength}
+            editable={!disabled}
             {...textInputProps}
           />
           {/* 전송 버튼 */}
           {hasText && (
-            <Pressable style={styles.sendButton} onPress={handleSend}>
+            <Pressable
+              style={[styles.sendButton, disabled && styles.sendButtonDisabled]}
+              onPress={handleSend}
+              disabled={disabled}
+            >
               <Ionicons name="arrow-up" size={20} color={COLORS.WHITE} />
             </Pressable>
           )}
@@ -134,6 +172,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: COLORS.MOEL_BLUE,
+  },
+  sendButtonDisabled: {
+    opacity: 0.5,
   },
 });
 

@@ -27,9 +27,7 @@ const initializeI18n = (() => {
     try {
       const stored = await AsyncStorage.getItem("user-storage");
       if (stored) {
-        const parsed = JSON.parse(stored);
-        const userData = parsed.state;
-        initialLanguage = userData.language;
+        initialLanguage = JSON.parse(stored).state.language;
       }
     } catch {
       // AsyncStorage 오류 시 기본 언어 사용

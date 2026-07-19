@@ -6,7 +6,9 @@
       "input_placeholder": "សូមបញ្ចូលសំណួររបស់អ្នក។",
       "drawer_new_chat": "ការសន្ទនាថ្មី",
       "drawer_language": "ប្តូរភាសា",
-      "drawer_chat_history": "ប្រវត្តិសន្ទនា"
+      "drawer_chat_history": "ប្រវត្តិសន្ទនា",
+      "delete_chat_success": "ការសន្ទនាត្រូវបានលុប។",
+      "delete_chat_failed": "បរាជ័យក្នុងការលុបការសន្ទនា។"
     },
     "language": {
       "select_language": "សូមជ្រើសរើសភាសា។",

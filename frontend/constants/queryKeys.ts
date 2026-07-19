@@ -5,10 +5,10 @@ export const chatKeys = {
   sessionList: () => [...chatKeys.all, "sessionList"] as const,
 
   // 특정 세션 상세
-  session: (sessionId: string) =>
+  session: (sessionId: number) =>
     [...chatKeys.all, "session", sessionId] as const,
 
   // 특정 세션의 메시지 목록
-  messages: (sessionId: string) =>
+  messages: (sessionId: number) =>
     [...chatKeys.all, "messages", sessionId] as const,
 };

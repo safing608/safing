@@ -10,7 +10,7 @@ import Markdown from "react-native-markdown-display";
 import { markdownStyles } from "@/constants/MarkdownStyles";
 
 interface ChatBubbleProps {
-  role: "user" | "assistant";
+  role: "USER" | "ASSISTANT";
   text: string;
   userError?: string;
   assistantError?: string;
@@ -51,10 +51,10 @@ function ChatBubble({
     <View
       style={[
         styles.container,
-        role === "user" ? styles.userRow : styles.assistantRow,
+        role === "USER" ? styles.userRow : styles.assistantRow,
       ]}
     >
-      {role === "user" ? (
+      {role === "USER" ? (
         // 사용자 메시지
         <View style={styles.messageWrapper}>
           <View style={[styles.userContainer, { maxWidth: maxBubbleWidth }]}>

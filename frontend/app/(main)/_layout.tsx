@@ -5,18 +5,25 @@ import AuthSheet from "@/components/user/AuthSheet";
 import LanguageSheet from "@/components/user/LanguageSheet";
 import { COLORS } from "@/constants/colors";
 import { SPACING } from "@/constants/sizes";
+import { useDeleteChat } from "@/hooks/queries/useChat";
 import { dev } from "@/utils/dev";
-import { Stack, usePathname, useRouter } from "expo-router";
+import { router, Stack, usePathname } from "expo-router";
 import React, { useState } from "react";
-import { Alert, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function MainLayout() {
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [languageSheetVisible, setLanguageSheetVisible] = useState(false);
   const [authSheetVisible, setAuthSheetVisible] = useState(false);
-  const router = useRouter();
   const pathname = usePathname();
+  const { mutate: deleteChat } = useDeleteChat();
+
+  // /chat/[id] 경로에서만 sessionId 추출 (새 대화 /chat 이면 null)
+  const currentSessionId = (() => {
+    const match = pathname.match(/^\/chat\/(\d+)$/);
+    return match ? Number(match[1]) : null;
+  })();
 
   // 채팅 드로어 열기
   const handleMenuPress = () => {
@@ -33,8 +40,6 @@ export default function MainLayout() {
     setDrawerVisible(false);
     // 이미 chat 화면이면 반응 x
     if (pathname === "/chat") {
-      dev.log(pathname);
-      dev.log("이미 chat 화면이면 반응 x");
       return;
     }
     router.push("/chat");
@@ -46,11 +51,15 @@ export default function MainLayout() {
     setLanguageSheetVisible(true);
   };
 
-  // 대화 내역 클릭 시 대화 내역 화면으로 이동
-  const handleChatHistory = () => {
+  // 대화 내역 클릭 시 선택된 대화방으로 이동
+  const handleChatHistory = (sessionId: number) => {
     setDrawerVisible(false);
-    // TODO: 선택된 대화방으로 이동
-    Alert.alert("대화 내역", "선택된 대화방으로 이동합니다.");
+
+    if (currentSessionId === sessionId) {
+      return;
+    }
+
+    router.push(`/chat/${sessionId}`);
   };
 
   // 계정 설정 클릭 시 계정 설정 액션 시트 열기
@@ -59,15 +68,27 @@ export default function MainLayout() {
     setAuthSheetVisible(true);
   };
 
+  // 대화 삭제 클릭 시 대화 삭제
+  const handleDeletePress = () => {
+    if (currentSessionId) {
+      dev.log("대화 삭제", currentSessionId);
+      deleteChat(currentSessionId);
+    }
+  };
+
   return (
     <AuthRoute>
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.container}>
-          <ChatHeader onMenuPress={handleMenuPress} />
+          <ChatHeader
+            onMenuPress={handleMenuPress}
+            onDeletePress={currentSessionId ? handleDeletePress : undefined}
+          />
 
           <Stack
             screenOptions={{
               headerShown: false,
+              animation: "none",
               contentStyle: {
                 backgroundColor: COLORS.WHITE,
               },
@@ -90,6 +111,7 @@ export default function MainLayout() {
             onLanguageChange={handleLanguageChange}
             onChatHistory={handleChatHistory}
             onSettings={handleSettings}
+            currentSessionId={currentSessionId}
           />
 
           <LanguageSheet

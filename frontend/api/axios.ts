@@ -16,7 +16,7 @@ axiosInstance.interceptors.request.use(
   (config) => {
     const { accessToken } = useAuthStore.getState();
 
-    dev.log("요청 URL:", config.url);
+    dev.log("요청:", config.method?.toUpperCase(), config.url);
 
     if (accessToken) {
       config.headers.Authorization = `Bearer ${accessToken}`;
@@ -37,9 +37,9 @@ axiosInstance.interceptors.response.use(
 
     // 로그인/가입 관련 엔드포인트와 첫 진입 시 토큰 갱신 제외
     const isAuthEndpoint =
-      originalRequest.url?.includes("/api/auth/google") ||
-      originalRequest.url?.includes("/api/auth/google/signup") ||
-      originalRequest.url?.includes("/api/auth/reissue");
+      originalRequest.url?.includes("/auth/google") ||
+      originalRequest.url?.includes("/auth/google/signup") ||
+      originalRequest.url?.includes("/auth/reissue");
 
     // 401 또는 403 에러이고 아직 재시도하지 않은 경우 (단, 인증 엔드포인트 제외)
     if (
@@ -63,13 +63,13 @@ axiosInstance.interceptors.response.use(
 
         // 리프레시 토큰이 없는 경우
         if (!refreshToken) {
-          await logout("/login");
+          await useAuthStore.getState().logout("/login");
           throw new Error("Refresh token 없음");
         }
 
         // 토큰 재발급 요청
         const response = await axios.post(
-          `${process.env.EXPO_PUBLIC_BASE_URL}/api/auth/reissue`,
+          `${process.env.EXPO_PUBLIC_BASE_URL}/auth/reissue`,
           { refreshToken },
           {
             headers: {
@@ -121,6 +121,7 @@ axiosInstance.interceptors.response.use(
       method: error.config?.method,
     });
 
+    
     throw error;
   },
 );
