@@ -32,14 +32,15 @@ class RiskClassificationAgent:
         if not candidate_scores:
             return self._unclassified()
 
-        best_code, best_score = max(candidate_scores.items(), key=lambda item: item[1])
+        detail_code, best_score = max(candidate_scores.items(), key=lambda item: item[1])
         if best_score < 2:
             return self._unclassified()
 
-        accident_code = self.code_map[best_code]
+        accident_code = self.code_map[detail_code]
+        parent_code = self._public_risk_code(accident_code)
         return RiskClassification(
-            risk_code=accident_code.code,
-            risk_type=accident_code.name_ko,
+            risk_code=parent_code,
+            risk_type=self._public_risk_type(accident_code, parent_code),
             severity=self._severity_for(accident_code),
             confidence=self._confidence(best_score),
         )
@@ -78,6 +79,18 @@ class RiskClassificationAgent:
             if len(token.strip()) >= 2
         }
         return sum(2 for token in tokens if token and token in normalized_message)
+
+    def _public_risk_code(self, code: AccidentTypeCode) -> str:
+        if code.code == "Z":
+            return "Z"
+        return code.parent_code or code.code[:2]
+
+    def _public_risk_type(self, detail_code: AccidentTypeCode, parent_code: str) -> str:
+        parent = self.code_map.get(parent_code)
+        if parent is not None:
+            return parent.name_ko
+        description = detail_code.description or detail_code.name_ko
+        return description.split("(", 1)[0]
 
     def _unclassified(self) -> RiskClassification:
         unclassified = self.accident_code_loader.get_unclassified_code()
