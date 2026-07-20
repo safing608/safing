@@ -3,8 +3,10 @@ import ChatInput, { ChatInputHandle } from "@/components/chat/ChatInput";
 import { COLORS } from "@/constants/colors";
 import { SPACING } from "@/constants/sizes";
 import { useGetChat, useSendQuestion } from "@/hooks/queries/useChat";
+import { useChatStream } from "@/hooks/useChatStream";
 import useKeyboard from "@/hooks/useKeyboard";
 import { useLocalSearchParams } from "expo-router";
+import { t } from "i18next";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Animated,
@@ -15,9 +17,7 @@ import {
   View,
 } from "react-native";
 
-interface ChatRoomScreenProps {}
-
-function ChatRoomScreen({}: ChatRoomScreenProps) {
+function ChatRoomScreen() {
   const { isKeyboardVisible, keyboardHeight } = useKeyboard();
 
   const [inputHeight, setInputHeight] = useState(0);
@@ -31,6 +31,16 @@ function ChatRoomScreen({}: ChatRoomScreenProps) {
 
   const { mutate: sendQuestion, isPending } = useSendQuestion();
 
+  // SSE
+  const {
+    content: streamContent,
+    status: streamStatus,
+    riskTypeName: streamRiskTypeName,
+  } = useChatStream(Number(sessionId));
+
+  const isStreaming =
+    streamStatus === "connecting" || streamStatus === "streaming";
+
   const scrollToBottom = useCallback((animated = true) => {
     requestAnimationFrame(() => {
       scrollViewRef.current?.scrollToEnd({ animated });
@@ -42,6 +52,12 @@ function ChatRoomScreen({}: ChatRoomScreenProps) {
     if (!chat?.length) return;
     scrollToBottom(true);
   }, [chat?.length, scrollToBottom]);
+
+  // SSE 스트림 상태 변경 시 맨 아래로
+  useEffect(() => {
+    if (!isStreaming) return;
+    scrollToBottom(false);
+  }, [streamContent, isStreaming, scrollToBottom]);
 
   // 플랫폼별 입력창 bottom 위치 계산
   // iOS: keyboardWillShow로 미리 감지 → 애니메이션 duration 맞춰야 함
@@ -66,15 +82,8 @@ function ChatRoomScreen({}: ChatRoomScreenProps) {
 
   // 기존 대화에 질문 전송
   const handleSendQuestion = (content: string) => {
-    if (isPending) return;
-    sendQuestion(
-      { sessionId: Number(sessionId), content },
-      {
-        onSuccess: () => {
-          scrollToBottom(true);
-        },
-      },
-    );
+    if (isPending || isStreaming) return;
+    sendQuestion({ sessionId: Number(sessionId), content });
   };
 
   // 실제 측정된 inputHeight + 키보드 위치 = 정확한 paddingBottom
@@ -100,6 +109,28 @@ function ChatRoomScreen({}: ChatRoomScreenProps) {
             text={item.content as string}
           />
         ))}
+
+        {/* 스트리밍 중인 답변을 임시 말풍선으로 표시 */}
+        {isStreaming && (
+          <ChatBubble
+            role="ASSISTANT"
+            text={streamContent}
+            riskTypeName={streamRiskTypeName ?? undefined}
+            // isStreaming // 타이핑 커서 같은 시각 효과 넣고 싶으면 활용
+          />
+        )}
+
+        {/* 스트리밍 실패 시 에러 표시 */}
+        {streamStatus === "error" && (
+          <ChatBubble
+            role="ASSISTANT"
+            assistantError={t("error.common_error")}
+            onRetry={() => {
+              // 재시도 로직: 마지막 유저 메시지를 다시 보내거나
+              // 별도 재시도 API가 있으면 그걸 호출
+            }}
+          />
+        )}
       </ScrollView>
 
       {/* 채팅 input 컨테이너 */}

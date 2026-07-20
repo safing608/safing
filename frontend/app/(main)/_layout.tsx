@@ -8,36 +8,32 @@ import { SPACING } from "@/constants/sizes";
 import { useDeleteChat } from "@/hooks/queries/useChat";
 import { dev } from "@/utils/dev";
 import { router, Stack, usePathname } from "expo-router";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+// 활성화된 오버레이 타입
+type ActiveOverlay = "drawer" | "language" | "auth" | null;
+
 export default function MainLayout() {
-  const [drawerVisible, setDrawerVisible] = useState(false);
-  const [languageSheetVisible, setLanguageSheetVisible] = useState(false);
-  const [authSheetVisible, setAuthSheetVisible] = useState(false);
+  const [activeOverlay, setActiveOverlay] = useState<ActiveOverlay>(null);
+
+  const handleLanguageChange = () => setActiveOverlay("language");
+  const handleSettings = () => setActiveOverlay("auth");
+  const handleMenuPress = () => setActiveOverlay("drawer");
+
   const pathname = usePathname();
   const { mutate: deleteChat } = useDeleteChat();
 
-  // /chat/[id] 경로에서만 sessionId 추출 (새 대화 /chat 이면 null)
-  const currentSessionId = (() => {
+  // /chat/[id] 경로에서만 sessionId 추출
+  const currentSessionId = useMemo(() => {
     const match = pathname.match(/^\/chat\/(\d+)$/);
     return match ? Number(match[1]) : null;
-  })();
-
-  // 채팅 드로어 열기
-  const handleMenuPress = () => {
-    setDrawerVisible(true);
-  };
-
-  // 채팅 드로어 닫기
-  const handleDrawerClose = () => {
-    setDrawerVisible(false);
-  };
+  }, [pathname]);
 
   // 새로운 대화 클릭 시 새로운 대화 화면으로 이동
   const handleNewChat = () => {
-    setDrawerVisible(false);
+    setActiveOverlay(null);
     // 이미 chat 화면이면 반응 x
     if (pathname === "/chat") {
       return;
@@ -45,27 +41,15 @@ export default function MainLayout() {
     router.push("/chat");
   };
 
-  // 언어 변경 클릭 시 언어 변경 모달 열기
-  const handleLanguageChange = () => {
-    setDrawerVisible(false);
-    setLanguageSheetVisible(true);
-  };
-
   // 대화 내역 클릭 시 선택된 대화방으로 이동
   const handleChatHistory = (sessionId: number) => {
-    setDrawerVisible(false);
+    setActiveOverlay(null);
 
     if (currentSessionId === sessionId) {
       return;
     }
 
     router.push(`/chat/${sessionId}`);
-  };
-
-  // 계정 설정 클릭 시 계정 설정 액션 시트 열기
-  const handleSettings = () => {
-    setDrawerVisible(false);
-    setAuthSheetVisible(true);
   };
 
   // 대화 삭제 클릭 시 대화 삭제
@@ -105,8 +89,8 @@ export default function MainLayout() {
           </Stack>
 
           <ChatDrawer
-            visible={drawerVisible}
-            onClose={handleDrawerClose}
+            visible={activeOverlay === "drawer"}
+            onClose={() => setActiveOverlay(null)}
             onNewChat={handleNewChat}
             onLanguageChange={handleLanguageChange}
             onChatHistory={handleChatHistory}
@@ -115,12 +99,12 @@ export default function MainLayout() {
           />
 
           <LanguageSheet
-            visible={languageSheetVisible}
-            onClose={() => setLanguageSheetVisible(false)}
+            visible={activeOverlay === "language"}
+            onClose={() => setActiveOverlay(null)}
           />
           <AuthSheet
-            visible={authSheetVisible}
-            onClose={() => setAuthSheetVisible(false)}
+            visible={activeOverlay === "auth"}
+            onClose={() => setActiveOverlay(null)}
           />
         </View>
       </SafeAreaView>

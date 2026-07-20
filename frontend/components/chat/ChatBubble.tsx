@@ -8,12 +8,14 @@ import React, { useEffect, useState } from "react";
 import { StyleSheet, View, useWindowDimensions } from "react-native";
 import Markdown from "react-native-markdown-display";
 import { markdownStyles } from "@/constants/MarkdownStyles";
+import { t } from "i18next";
 
 interface ChatBubbleProps {
   role: "USER" | "ASSISTANT";
-  text: string;
+  text?: string;
   userError?: string;
   assistantError?: string;
+  riskTypeName?: string;
   onCopy?: () => void;
   onRetry?: () => void;
 }
@@ -21,6 +23,7 @@ interface ChatBubbleProps {
 function ChatBubble({
   role,
   text,
+  riskTypeName,
   userError,
   assistantError,
   onCopy,
@@ -58,6 +61,11 @@ function ChatBubble({
         // 사용자 메시지
         <View style={styles.messageWrapper}>
           <View style={[styles.userContainer, { maxWidth: maxBubbleWidth }]}>
+            {riskTypeName && (
+              <FontText weight="light" style={styles.userText}>
+                {t("chat.risk_type_name")}: {riskTypeName}
+              </FontText>
+            )}
             <FontText weight="light" style={styles.userText}>
               {text}
             </FontText>

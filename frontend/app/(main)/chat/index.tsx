@@ -14,9 +14,7 @@ import {
   View,
 } from "react-native";
 
-interface ChatScreenProps {}
-
-function ChatScreen({}: ChatScreenProps) {
+function ChatScreen() {
   const { isKeyboardVisible, keyboardHeight } = useKeyboard();
   const { t } = useTranslation();
   const { mutate: createChat, isPending } = useCreateChat();

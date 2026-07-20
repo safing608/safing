@@ -16,10 +16,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
 function LanguageScreen() {
-  const { t } = useTranslation();
   const language = useUserStore((state) => state.language);
   const setLanguage = useUserStore((state) => state.setLanguage);
   const { login: setAuth } = useAuthStore.getState();
+  const { t } = useTranslation();
 
   // URL 파라미터로 받은 idToken과 returnTo 확인
   const { idToken, returnTo } = useLocalSearchParams<{

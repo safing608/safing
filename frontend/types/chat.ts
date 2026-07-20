@@ -50,3 +50,30 @@ export interface sendQuestionRequest {
 export interface sendQuestionResponse {
   messageId: number;
 }
+
+// AI 답변 스트림
+
+export type streamEvent = "riskType" | "message" | "complete" | "error";
+
+export interface riskTypeEventResponse {
+  riskTypeCode: string;
+  riskTypeName: string;
+}
+
+export interface MessageEventResponse {
+  content: string;
+}
+
+export interface CompleteEventResponse {
+  title: string;
+  riskTypeCode: string;
+  riskTypeName: string;
+  answer: string;
+}
+
+export interface ErrorEventResponse {
+  code: string;
+  message: string;
+  sessionId: number;
+  messageId: number;
+}

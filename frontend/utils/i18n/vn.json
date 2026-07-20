@@ -7,6 +7,7 @@
       "drawer_new_chat": "Cuộc trò chuyện mới",
       "drawer_language": "Thay đổi ngôn ngữ",
       "drawer_chat_history": "Lịch sử trò chuyện",
+      "risk_type_name": "Loại rủi ro",
       "delete_chat_success": "Cuộc trò chuyện đã được xóa.",
       "delete_chat_failed": "Xóa cuộc trò chuyện thất bại."
     },
@@ -28,7 +29,8 @@
       "confirm": "Xác nhận"
     },
     "error": {
-      "common_error": "Đã xảy ra sự cố. Vui lòng thử lại sau."
+      "common_error": "Đã xảy ra sự cố. Vui lòng thử lại sau.",
+      "default_error": "Đã xảy ra sự cố."
     }
   }
 }

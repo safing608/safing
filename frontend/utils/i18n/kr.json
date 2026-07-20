@@ -7,6 +7,7 @@
       "drawer_new_chat": "새로운 대화",
       "drawer_language": "언어 변경",
       "drawer_chat_history": "대화 내역",
+      "risk_type_name": "위험 유형",
       "delete_chat_success": "대화가 삭제되었습니다.",
       "delete_chat_failed": "대화 삭제에 실패했습니다."
     },
@@ -28,7 +29,8 @@
       "confirm": "확인"
     },
     "error": {
-      "common_error": "문제가 발생했습니다. 잠시 후 다시 시도해주세요."
+      "common_error": "문제가 발생했습니다. 잠시 후 다시 시도해주세요.",
+      "default_error": "문제가 발생했습니다."
     }
   }
 }

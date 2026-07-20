@@ -10,15 +10,16 @@ import { chatKeys } from "@/constants/queryKeys";
 import {
   createChatResponse,
   getChatListResponse,
-  getChatResponse,
   sendQuestionRequest,
-  sendQuestionResponse,
+  sendQuestionResponse
 } from "@/types/chat";
+import { appendMessageToCache } from "@/utils/chatCache";
+import { startChatStream } from "@/utils/chatStreamManager";
 import { dev } from "@/utils/dev";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
-import Toast from "react-native-toast-message";
 import { t } from "i18next";
+import Toast from "react-native-toast-message";
 
 // 대화 목록 조회
 export function useGetChatList(enabled = true) {
@@ -60,6 +61,8 @@ export function useCreateChat() {
         },
       );
 
+      startChatStream(data.sessionId, data.messageId);
+
       router.push(`/chat/${data.sessionId}`);
     },
     onError: (error) => {
@@ -85,6 +88,7 @@ export function useDeleteChat() {
       router.push("/chat");
     },
     onError: (error) => {
+      dev.error("대화 삭제 실패", error);
       Toast.show({
         text1: t("chat.delete_chat_failed"),
         type: "error",
@@ -98,22 +102,16 @@ export function useSendQuestion() {
   return useMutation({
     mutationFn: (payload: sendQuestionRequest) => sendQuestion(payload),
     onSuccess: (data: sendQuestionResponse, payload: sendQuestionRequest) => {
-      queryClient.setQueryData<getChatResponse>(
-        chatKeys.session(payload.sessionId),
-        (prev) => {
-          const list = prev ?? [];
-          return [
-            ...list,
-            {
-              messageId: data.messageId,
-              status: "DONE",
-              role: "USER",
-              riskTypeName: null,
-              content: payload.content,
-            },
-          ];
-        },
-      );
+      appendMessageToCache(payload.sessionId, {
+        messageId: -Date.now(), // 임시 messageId
+        role: "USER",
+        status: "DONE",
+        riskTypeName: null,
+        content: payload.content,
+      });
+
+      startChatStream(payload.sessionId, data.messageId);
+      
     },
     onError: (error) => {
       dev.error(error);
