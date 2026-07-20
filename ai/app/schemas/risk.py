@@ -25,3 +25,8 @@ class RiskCandidate(BaseModel):
     parent_risk_code: str
     parent_risk_type: str
     score: int = Field(ge=0)
+
+
+class ParentRiskCandidate(BaseModel):
+    parent_risk_code: str
+    parent_risk_type: str

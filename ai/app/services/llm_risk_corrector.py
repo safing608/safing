@@ -5,11 +5,17 @@ import httpx
 from pydantic import BaseModel, Field, ValidationError
 
 from app.config.settings import settings
-from app.schemas.risk import RiskCandidate
+from app.schemas.risk import ParentRiskCandidate, RiskCandidate
 
 
 class LlmRiskCorrection(BaseModel):
     risk_code: str = Field(..., alias="riskCode")
+    confidence: float = Field(ge=0.0, le=1.0)
+    reason: str | None = None
+
+
+class LlmParentRiskCorrection(BaseModel):
+    parent_risk_code: str = Field(..., alias="parentRiskCode")
     confidence: float = Field(ge=0.0, le=1.0)
     reason: str | None = None
 
@@ -43,6 +49,26 @@ class LlmRiskCorrector:
 
         valid_codes = {candidate.risk_code for candidate in candidates} | {"Z"}
         if correction.risk_code not in valid_codes:
+            return None
+
+        return correction
+
+    def correct_parent(
+        self,
+        text: str,
+        candidates: list[ParentRiskCandidate],
+    ) -> LlmParentRiskCorrection | None:
+        if not self.api_key or not candidates:
+            return None
+
+        try:
+            response = self._request_parent(text, candidates)
+            correction = LlmParentRiskCorrection.model_validate_json(response)
+        except (httpx.HTTPError, json.JSONDecodeError, ValidationError, ValueError):
+            return None
+
+        valid_codes = {candidate.parent_risk_code for candidate in candidates} | {"Z"}
+        if correction.parent_risk_code not in valid_codes:
             return None
 
         return correction
@@ -98,6 +124,74 @@ class LlmRiskCorrector:
                             "reason": {"type": ["string", "null"]},
                         },
                         "required": ["riskCode", "confidence", "reason"],
+                    },
+                }
+            },
+            "max_output_tokens": 200,
+        }
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+        }
+
+        with httpx.Client(timeout=self.timeout_seconds) as client:
+            response = client.post(
+                f"{self.base_url}/responses",
+                headers=headers,
+                json=payload,
+            )
+            response.raise_for_status()
+
+        return self._extract_output_text(response.json())
+
+    def _request_parent(self, text: str, candidates: list[ParentRiskCandidate]) -> str:
+        payload = {
+            "model": self.model,
+            "input": [
+                {
+                    "role": "system",
+                    "content": (
+                        "You classify industrial accident parent risk codes for SAFING. "
+                        "Choose exactly one parentRiskCode from the provided parent risk list. "
+                        "Use Z only when none of the parent risks fit the text. "
+                        "Do not invent a code."
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": json.dumps(
+                        {
+                            "text": text[:4000],
+                            "parentCandidates": [
+                                {
+                                    "parentRiskCode": candidate.parent_risk_code,
+                                    "parentRiskType": candidate.parent_risk_type,
+                                }
+                                for candidate in candidates
+                            ],
+                        },
+                        ensure_ascii=False,
+                    ),
+                },
+            ],
+            "text": {
+                "format": {
+                    "type": "json_schema",
+                    "name": "parent_risk_code_selection",
+                    "strict": True,
+                    "schema": {
+                        "type": "object",
+                        "additionalProperties": False,
+                        "properties": {
+                            "parentRiskCode": {"type": "string"},
+                            "confidence": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 1,
+                            },
+                            "reason": {"type": ["string", "null"]},
+                        },
+                        "required": ["parentRiskCode", "confidence", "reason"],
                     },
                 }
             },

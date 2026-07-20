@@ -1,6 +1,20 @@
 import unittest
 
 from app.agents.risk_classifier import RiskClassificationAgent
+from app.services.llm_risk_corrector import LlmParentRiskCorrection, LlmRiskCorrection
+
+
+class FakeLlmRiskCorrector:
+    api_key = "test-key"
+
+    def correct(self, text, candidates):
+        for candidate in candidates:
+            if candidate.risk_code == "0701":
+                return LlmRiskCorrection(riskCode="0701", confidence=0.88, reason="matched detail")
+        return None
+
+    def correct_parent(self, text, candidates):
+        return LlmParentRiskCorrection(parentRiskCode="07", confidence=0.8, reason="matched parent")
 
 
 class RiskClassificationAgentTest(unittest.TestCase):
@@ -43,6 +57,21 @@ class RiskClassificationAgentTest(unittest.TestCase):
         self.assertEqual(result.parent_risk_type, "분류불능")
         self.assertEqual(result.severity, "unknown")
         self.assertEqual(result.confidence, 0.0)
+
+    def test_has_keyword_profile_for_every_accident_code(self) -> None:
+        self.assertEqual(
+            set(self.agent.code_map),
+            {profile.code for profile in self.agent.keyword_profiles},
+        )
+
+    def test_expands_from_parent_to_detail_when_rule_based_candidates_are_missing(self) -> None:
+        agent = RiskClassificationAgent(llm_risk_corrector=FakeLlmRiskCorrector())
+
+        result = agent.classify("이 문장은 규칙 후보가 없는 테스트 문장입니다.")
+
+        self.assertEqual(result.risk_code, "0701")
+        self.assertEqual(result.parent_risk_code, "07")
+        self.assertEqual(result.method, "llm_corrected")
 
 
 if __name__ == "__main__":
