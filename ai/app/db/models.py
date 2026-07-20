@@ -53,7 +53,9 @@ class DocumentChunk(Base):
     page_start: Mapped[int | None] = mapped_column(Integer, nullable=True)
     page_end: Mapped[int | None] = mapped_column(Integer, nullable=True)
     risk_codes: Mapped[list[str]] = mapped_column(ARRAY(Text), nullable=False, default=list)
+    parent_risk_codes: Mapped[list[str]] = mapped_column(ARRAY(Text), nullable=False, default=list)
     risk_types: Mapped[list[str]] = mapped_column(ARRAY(Text), nullable=False, default=list)
+    parent_risk_types: Mapped[list[str]] = mapped_column(ARRAY(Text), nullable=False, default=list)
     metadata_: Mapped[dict[str, Any]] = mapped_column("metadata", JSONB, nullable=False, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(

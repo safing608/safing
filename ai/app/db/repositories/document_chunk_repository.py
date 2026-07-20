@@ -25,7 +25,9 @@ class DocumentChunkRepository:
                     page_start,
                     page_end,
                     risk_codes,
+                    parent_risk_codes,
                     risk_types,
+                    parent_risk_types,
                     metadata
                 )
                 VALUES (
@@ -37,7 +39,9 @@ class DocumentChunkRepository:
                     :page_start,
                     :page_end,
                     :risk_codes,
+                    :parent_risk_codes,
                     :risk_types,
+                    :parent_risk_types,
                     CAST(:metadata AS jsonb)
                 )
                 ON CONFLICT (content_hash) DO NOTHING
@@ -45,7 +49,9 @@ class DocumentChunkRepository:
                 """
             ).bindparams(
                 bindparam("risk_codes", type_=ARRAY(Text)),
+                bindparam("parent_risk_codes", type_=ARRAY(Text)),
                 bindparam("risk_types", type_=ARRAY(Text)),
+                bindparam("parent_risk_types", type_=ARRAY(Text)),
             )
         result = self.session.execute(
             statement,
@@ -58,7 +64,9 @@ class DocumentChunkRepository:
                 "page_start": chunk.page_start,
                 "page_end": chunk.page_end,
                 "risk_codes": chunk.risk_codes,
+                "parent_risk_codes": chunk.parent_risk_codes,
                 "risk_types": chunk.risk_types,
+                "parent_risk_types": chunk.parent_risk_types,
                 "metadata": json.dumps(chunk.metadata, ensure_ascii=False),
             },
         )

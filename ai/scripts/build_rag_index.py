@@ -26,6 +26,11 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Persist chunks to PostgreSQL + pgvector. Default is dry-run.",
     )
+    parser.add_argument(
+        "--disable-llm",
+        action="store_true",
+        help="Use only rule-based risk tagging even when OPEN_API_KEY is configured.",
+    )
     return parser.parse_args()
 
 
@@ -40,7 +45,9 @@ def main() -> None:
     args = parse_args()
     file_path = resolve_file_path(args.file)
 
-    metadata, chunks, saved_ids = RagIndexBuilder().build_and_save(
+    metadata, chunks, saved_ids = RagIndexBuilder(
+        use_llm_risk_correction=not args.disable_llm,
+    ).build_and_save(
         file_path=file_path,
         source_title=args.title,
         provider=args.provider,
@@ -54,16 +61,28 @@ def main() -> None:
         for chunk in chunks
         for risk_code in chunk.risk_codes
     )
+    parent_risk_counter = Counter(
+        risk_code
+        for chunk in chunks
+        for risk_code in chunk.parent_risk_codes
+    )
+    tagging_method_counter = Counter(
+        chunk.metadata.get("risk_tagging_method", "unknown")
+        for chunk in chunks
+    )
 
     print(f"source: {metadata.source_title}")
     print(f"file: {metadata.source_path}")
     print(f"chunks: {len(chunks)}")
     print(f"risk_codes: {dict(sorted(risk_counter.items()))}")
+    print(f"parent_risk_codes: {dict(sorted(parent_risk_counter.items()))}")
+    print(f"tagging_methods: {dict(sorted(tagging_method_counter.items()))}")
 
     if chunks:
         first_chunk = chunks[0]
         print(f"first_chunk_page: {first_chunk.page_start}")
         print(f"first_chunk_risk_codes: {first_chunk.risk_codes}")
+        print(f"first_chunk_parent_risk_codes: {first_chunk.parent_risk_codes}")
         print(f"first_chunk_preview: {first_chunk.content[:160]}")
 
     if args.save:

@@ -16,10 +16,11 @@ class RagIndexBuilder:
         risk_tagger: RiskTagger | None = None,
         embedding_service: EmbeddingService | None = None,
         vector_store: object | None = None,
+        use_llm_risk_correction: bool = True,
     ) -> None:
         self.text_cleaner = text_cleaner or TextCleaner()
         self.chunker = chunker or DocumentChunker()
-        self.risk_tagger = risk_tagger or RiskTagger()
+        self.risk_tagger = risk_tagger or RiskTagger(use_llm=use_llm_risk_correction)
         self.embedding_service = embedding_service or EmbeddingService()
         self.vector_store = vector_store
 

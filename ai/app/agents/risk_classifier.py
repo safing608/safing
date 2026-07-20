@@ -3,7 +3,8 @@ from dataclasses import dataclass
 
 from app.rag.accident_code_loader import AccidentCodeLoader
 from app.schemas.chat import SafetyChatState
-from app.schemas.risk import AccidentTypeCode, RiskClassification
+from app.schemas.risk import AccidentTypeCode, RiskCandidate, RiskClassification
+from app.services.llm_risk_corrector import LlmRiskCorrector
 
 
 @dataclass(frozen=True)
@@ -15,35 +16,70 @@ class KeywordProfile:
 class RiskClassificationAgent:
     name = "risk_classifier"
 
-    def __init__(self, accident_code_loader: AccidentCodeLoader | None = None) -> None:
+    def __init__(
+        self,
+        accident_code_loader: AccidentCodeLoader | None = None,
+        llm_risk_corrector: LlmRiskCorrector | None = None,
+    ) -> None:
         self.accident_code_loader = accident_code_loader or AccidentCodeLoader()
         self.code_map = self.accident_code_loader.get_code_map()
         self.keyword_profiles = self._build_keyword_profiles()
+        self.llm_risk_corrector = llm_risk_corrector or LlmRiskCorrector()
 
     async def run(self, state: SafetyChatState) -> SafetyChatState:
         message = state.normalized_message or state.message
         state.risk_classification = self.classify(message)
         return state
 
-    def classify(self, message: str) -> RiskClassification:
+    def classify(self, message: str, use_llm: bool = True) -> RiskClassification:
+        candidates = self.find_candidates(message)
+
+        if not candidates:
+            return self._unclassified()
+
+        rule_based_result = self._classification_from_code(
+            candidates[0].risk_code,
+            confidence=self._confidence(candidates[0].score),
+            method="rule_based",
+        )
+
+        if not use_llm:
+            return rule_based_result
+
+        correction = self.llm_risk_corrector.correct(message, candidates)
+        if correction is None:
+            if self.llm_risk_corrector.api_key:
+                return rule_based_result.model_copy(
+                    update={
+                        "method": "fallback",
+                        "reason": "LLM correction failed; used the highest scoring rule-based candidate.",
+                    }
+                )
+            return rule_based_result
+
+        return self._classification_from_code(
+            correction.risk_code,
+            confidence=correction.confidence,
+            method="llm_corrected",
+            reason=correction.reason,
+        )
+
+    def find_candidates(self, message: str, top_k: int = 8) -> list[RiskCandidate]:
         normalized_message = self._normalize(message)
         candidate_scores = self._score_candidates(normalized_message)
 
         if not candidate_scores:
-            return self._unclassified()
+            return []
 
-        detail_code, best_score = max(candidate_scores.items(), key=lambda item: item[1])
-        if best_score < 2:
-            return self._unclassified()
-
-        accident_code = self.code_map[detail_code]
-        parent_code = self._public_risk_code(accident_code)
-        return RiskClassification(
-            risk_code=parent_code,
-            risk_type=self._public_risk_type(accident_code, parent_code),
-            severity=self._severity_for(accident_code),
-            confidence=self._confidence(best_score),
+        ranked_scores = sorted(
+            candidate_scores.items(),
+            key=lambda item: item[1],
+            reverse=True,
         )
+        return [
+            self._candidate_from_code(code, score)
+            for code, score in ranked_scores[:top_k]
+        ]
 
     def _score_candidates(self, normalized_message: str) -> dict[str, int]:
         scores: dict[str, int] = {}
@@ -86,9 +122,8 @@ class RiskClassificationAgent:
         return code.parent_code or code.code[:2]
 
     def _public_risk_type(self, detail_code: AccidentTypeCode, parent_code: str) -> str:
-        parent = self.code_map.get(parent_code)
-        if parent is not None:
-            return parent.name_ko
+        if parent_code == "Z":
+            return "분류불능"
         description = detail_code.description or detail_code.name_ko
         return description.split("(", 1)[0]
 
@@ -97,8 +132,45 @@ class RiskClassificationAgent:
         return RiskClassification(
             risk_code=unclassified.code,
             risk_type=unclassified.name_ko,
+            parent_risk_code=unclassified.code,
+            parent_risk_type=unclassified.name_ko,
             severity="unknown",
             confidence=0.0,
+            method="fallback",
+        )
+
+    def _classification_from_code(
+        self,
+        code: str,
+        confidence: float,
+        method: str,
+        reason: str | None = None,
+    ) -> RiskClassification:
+        accident_code = self.code_map.get(code)
+        if accident_code is None:
+            return self._unclassified()
+
+        parent_code = self._public_risk_code(accident_code)
+        return RiskClassification(
+            risk_code=accident_code.code,
+            risk_type=accident_code.name_ko,
+            parent_risk_code=parent_code,
+            parent_risk_type=self._public_risk_type(accident_code, parent_code),
+            severity=self._severity_for(accident_code),
+            confidence=confidence,
+            method=method,
+            reason=reason,
+        )
+
+    def _candidate_from_code(self, code: str, score: int) -> RiskCandidate:
+        accident_code = self.code_map[code]
+        parent_code = self._public_risk_code(accident_code)
+        return RiskCandidate(
+            risk_code=accident_code.code,
+            risk_type=accident_code.name_ko,
+            parent_risk_code=parent_code,
+            parent_risk_type=self._public_risk_type(accident_code, parent_code),
+            score=score,
         )
 
     def _severity_for(self, code: AccidentTypeCode) -> str:

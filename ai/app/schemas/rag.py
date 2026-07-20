@@ -49,7 +49,9 @@ class RagChunk(BaseModel):
     page_start: int | None = None
     page_end: int | None = None
     risk_codes: list[str] = Field(default_factory=list)
+    parent_risk_codes: list[str] = Field(default_factory=list)
     risk_types: list[str] = Field(default_factory=list)
+    parent_risk_types: list[str] = Field(default_factory=list)
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 
