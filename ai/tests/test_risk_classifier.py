@@ -17,6 +17,16 @@ class FakeLlmRiskCorrector:
         return LlmParentRiskCorrection(parentRiskCode="07", confidence=0.8, reason="matched parent")
 
 
+class RaisingLlmRiskCorrector:
+    api_key = "test-key"
+
+    def correct(self, text, candidates):
+        raise AssertionError("LLM detail correction should not be called.")
+
+    def correct_parent(self, text, candidates):
+        raise AssertionError("LLM parent correction should not be called.")
+
+
 class RiskClassificationAgentTest(unittest.TestCase):
     def setUp(self) -> None:
         self.agent = RiskClassificationAgent()
@@ -72,6 +82,14 @@ class RiskClassificationAgentTest(unittest.TestCase):
         self.assertEqual(result.risk_code, "0701")
         self.assertEqual(result.parent_risk_code, "07")
         self.assertEqual(result.method, "llm_corrected")
+
+    def test_does_not_call_llm_when_disabled_and_candidates_are_missing(self) -> None:
+        agent = RiskClassificationAgent(llm_risk_corrector=RaisingLlmRiskCorrector())
+
+        result = agent.classify("이 문장은 규칙 후보가 없는 테스트 문장입니다.", use_llm=False)
+
+        self.assertEqual(result.risk_code, "Z")
+        self.assertEqual(result.parent_risk_code, "Z")
 
 
 if __name__ == "__main__":

@@ -56,6 +56,8 @@ class RiskClassificationAgent:
         candidates = self.find_candidates(message)
 
         if not candidates:
+            if not use_llm:
+                return self._unclassified()
             return self._classify_with_parent_expansion(message)
 
         rule_based_result = self._classification_from_code(
