@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     app_version: str = "0.1.0"
     debug: bool = True
     default_agent_timeout_seconds: int = 30
+    database_url: str = "postgresql+psycopg://safing:Safing%212026_Postgres@localhost:5432/safing"
 
     if SettingsConfigDict is not None:
         model_config = SettingsConfigDict(
