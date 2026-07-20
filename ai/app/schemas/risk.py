@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class AccidentTypeCode(BaseModel):
@@ -11,5 +11,22 @@ class AccidentTypeCode(BaseModel):
 class RiskClassification(BaseModel):
     risk_code: str
     risk_type: str
+    parent_risk_code: str
+    parent_risk_type: str
     severity: str
     confidence: float
+    method: str = "rule_based"
+    reason: str | None = None
+
+
+class RiskCandidate(BaseModel):
+    risk_code: str
+    risk_type: str
+    parent_risk_code: str
+    parent_risk_type: str
+    score: int = Field(ge=0)
+
+
+class ParentRiskCandidate(BaseModel):
+    parent_risk_code: str
+    parent_risk_type: str

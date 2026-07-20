@@ -32,7 +32,7 @@ class SafetyChatWorkflow:
 
         yield format_sse(
             "risk_classification",
-            RiskClassificationEvent(riskCode=state.risk_classification.risk_code),
+            RiskClassificationEvent(riskCode=state.risk_classification.parent_risk_code),
         )
 
         for step in state.safety_steps:
