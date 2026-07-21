@@ -30,7 +30,9 @@
     },
     "error": {
       "common_error": "Something went wrong. Please try again later.",
-      "default_error": "Something went wrong."
+      "default_error": "Something went wrong.",
+      "stream_stopped": "Response generation was stopped.",
+      "stream_failed": "Failed to generate an AI response."
     }
   }
 }

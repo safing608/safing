@@ -24,9 +24,10 @@ export interface ChatInputHandle {
 
 interface ChatInputProps extends TextInputProps {
   onSend?: (message: string) => void;
+  onStop?: () => void;
+  isStreaming?: boolean;
   maxLength?: number;
   disabled?: boolean;
-  // React Hook Form 연동을 위한 props
   onChangeText?: (text: string) => void;
   onBlur?: () => void;
   name?: string;
@@ -36,6 +37,8 @@ const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
   (
     {
       onSend,
+      onStop,
+      isStreaming = false,
       maxLength = 500,
       disabled = false,
       onChangeText,
@@ -45,13 +48,11 @@ const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
     },
     ref,
   ) => {
-    // 버튼 표시/숨김을 위한 최소한의 상태만 관리
     const [hasText, setHasText] = useState(false);
     const { t } = useTranslation();
     const textRef = useRef("");
     const inputRef = useRef<TextInput>(null);
 
-    // 입력 내용 초기화
     const clear = useCallback(() => {
       inputRef.current?.clear();
       textRef.current = "";
@@ -68,32 +69,30 @@ const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
       [clear],
     );
 
-    // 텍스트 변경 핸들러 - 재렌더링 최소화
     const handleChangeText = useCallback(
       (text: string) => {
         textRef.current = text;
-
-        // 버튼 표시 상태만 업데이트 (재렌더링 최소화)
         const newHasText = text.trim().length > 0;
         if (newHasText !== hasText) {
           setHasText(newHasText);
         }
-
-        // React Hook Form onChange 호출
         onChangeText?.(text);
       },
       [hasText, onChangeText],
     );
 
-    // 전송 핸들러
     const handleSend = useCallback(() => {
-      if (disabled) return;
+      if (disabled || isStreaming) return;
       const currentText = textRef.current.trim();
       if (currentText && onSend) {
         onSend(currentText);
         clear();
       }
-    }, [onSend, clear, disabled]);
+    }, [onSend, clear, disabled, isStreaming]);
+
+    const handleStop = useCallback(() => {
+      onStop?.();
+    }, [onStop]);
 
     return (
       <View style={styles.container}>
@@ -111,18 +110,27 @@ const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
             autoCorrect={false}
             multiline
             maxLength={maxLength}
-            editable={!disabled}
+            editable={!disabled && !isStreaming}
             {...textInputProps}
           />
-          {/* 전송 버튼 */}
-          {hasText && (
-            <Pressable
-              style={[styles.sendButton, disabled && styles.sendButtonDisabled]}
-              onPress={handleSend}
-              disabled={disabled}
-            >
-              <Ionicons name="arrow-up" size={20} color={COLORS.WHITE} />
+
+          {isStreaming ? (
+            <Pressable style={styles.stopButton} onPress={handleStop}>
+              <Ionicons name="stop" size={16} color={COLORS.WHITE} />
             </Pressable>
+          ) : (
+            hasText && (
+              <Pressable
+                style={[
+                  styles.sendButton,
+                  disabled && styles.sendButtonDisabled,
+                ]}
+                onPress={handleSend}
+                disabled={disabled}
+              >
+                <Ionicons name="arrow-up" size={20} color={COLORS.WHITE} />
+              </Pressable>
+            )
           )}
         </View>
       </View>
@@ -166,6 +174,14 @@ const styles = StyleSheet.create({
     fontFamily: "Pretendard_Regular",
   },
   sendButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: COLORS.MOEL_BLUE,
+  },
+  stopButton: {
     width: 32,
     height: 32,
     borderRadius: 16,

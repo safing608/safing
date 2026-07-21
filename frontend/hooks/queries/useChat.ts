@@ -3,6 +3,7 @@ import {
   deleteChat,
   getChat,
   getChatList,
+  retryQuestion,
   sendQuestion,
 } from "@/api/chat";
 import queryClient from "@/api/client";
@@ -10,11 +11,18 @@ import { chatKeys } from "@/constants/queryKeys";
 import {
   createChatResponse,
   getChatListResponse,
+  retryQuestionRequest,
   sendQuestionRequest,
-  sendQuestionResponse
+  sendQuestionResponse,
 } from "@/types/chat";
-import { appendMessageToCache } from "@/utils/chatCache";
+import {
+  appendMessageToCache,
+  clearMessageErrorInCache,
+  setMessageErrorInCache,
+  updateMessageInCache,
+} from "@/utils/chatCache";
 import { startChatStream } from "@/utils/chatStreamManager";
+import { useChatStreamStore } from "@/stores/chatStreamStore";
 import { dev } from "@/utils/dev";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
@@ -36,6 +44,9 @@ export function useGetChat(sessionId: number) {
     queryFn: () => getChat(sessionId),
     queryKey: chatKeys.session(sessionId),
     enabled: !!sessionId,
+    // 낙관적 업데이트 / SSE 캐시를 불필요하게 덮어쓰지 않음 -> 화면 전환 시 데이터 어긋날 가능성 막음
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
   });
 }
 
@@ -43,17 +54,12 @@ export function useGetChat(sessionId: number) {
 export function useCreateChat() {
   return useMutation({
     mutationFn: createChat,
-    onSuccess: (data: createChatResponse) => {
-      // 방법 1. invalidate 로 캐시 갱신
-      // queryClient.invalidateQueries({ queryKey: chatKeys.sessionList() });
-      // queryClient.invalidateQueries({
-      //   queryKey: chatKeys.session(data.sessionId),
-      // });
-      // 방법 2. invalidate 대신 캐시 갱신 — 불필요한 GET /chats 중복 방지
+    onSuccess: (data: createChatResponse, variables) => {
       queryClient.setQueryData<getChatListResponse>(
         chatKeys.sessionList(),
         (prev) => {
           const list = prev ?? [];
+          // 중복 추가 방어
           if (list.some((item) => item.sessionId === data.sessionId)) {
             return list;
           }
@@ -61,12 +67,33 @@ export function useCreateChat() {
         },
       );
 
-      startChatStream(data.sessionId, data.messageId);
+      const userMessageId = -Date.now();
+      // 진입 전 캐시 시드 — 마운트 직후 GET이 낙관적 UI를 덮지 않도록
+      queryClient.setQueryData(chatKeys.session(data.sessionId), [
+        {
+          messageId: userMessageId,
+          role: "USER",
+          status: "DONE",
+          riskTypeName: null,
+          content: variables.content,
+          errorMessage: null,
+        },
+      ]);
+
+      // SSE 연결
+      startChatStream(data.sessionId, data.messageId, {
+        userMessageId,
+        userContent: variables.content,
+      });
 
       router.push(`/chat/${data.sessionId}`);
     },
     onError: (error) => {
       dev.error(error);
+      Toast.show({
+        text1: t("error.default_error"),
+        type: "error",
+      });
     },
   });
 }
@@ -97,24 +124,108 @@ export function useDeleteChat() {
   });
 }
 
+type SendQuestionVariables = sendQuestionRequest & {
+  /** 재시도 시 기존 유저 메시지 ID 재사용 */
+  tempMessageId?: number;
+};
+
 // 기존 대화에 질문 전송
 export function useSendQuestion() {
   return useMutation({
-    mutationFn: (payload: sendQuestionRequest) => sendQuestion(payload),
-    onSuccess: (data: sendQuestionResponse, payload: sendQuestionRequest) => {
-      appendMessageToCache(payload.sessionId, {
-        messageId: -Date.now(), // 임시 messageId
-        role: "USER",
-        status: "DONE",
+    mutationFn: ({ tempMessageId: _, ...payload }: SendQuestionVariables) =>
+      sendQuestion(payload),
+    // 낙관적 업데이트
+    onMutate: async (variables) => {
+      const tempMessageId = variables.tempMessageId ?? -Date.now();
+
+      // 재시도인 경우
+      if (variables.tempMessageId) {
+        clearMessageErrorInCache(variables.sessionId, tempMessageId);
+        updateMessageInCache(variables.sessionId, tempMessageId, {
+          content: variables.content,
+          status: "DONE",
+        });
+      } else {
+        // 신규 전송인 경우: 새 유저 메시지 추가
+        appendMessageToCache(variables.sessionId, {
+          messageId: tempMessageId,
+          role: "USER",
+          status: "DONE",
+          riskTypeName: null,
+          content: variables.content,
+          errorMessage: null,
+        });
+      }
+
+      useChatStreamStore.getState().setStream(variables.sessionId, {
+        lastUserContent: variables.content,
+        userMessageId: tempMessageId,
+        status: "connecting",
+        errorMessage: null,
+        errorType: null,
+        content: "",
+        riskTypeCode: null,
         riskTypeName: null,
-        content: payload.content,
+        assistantMessageId: null,
       });
 
-      startChatStream(payload.sessionId, data.messageId);
-      
+      return { tempMessageId };
     },
-    onError: (error) => {
+    onSuccess: (
+      data: sendQuestionResponse,
+      payload: SendQuestionVariables,
+      context,
+    ) => {
+      const userMessageId = context?.tempMessageId ?? -Date.now();
+      const current = useChatStreamStore.getState().streams[payload.sessionId];
+
+      // POST 대기 중 사용자가 stop 한 경우 스트림 시작하지 않음
+      if (current?.status === "stopped") {
+        return;
+      }
+
+      startChatStream(payload.sessionId, data.messageId, {
+        userMessageId,
+        userContent: payload.content,
+      });
+    },
+    onError: (error, payload, context) => {
       dev.error(error);
+      const errorMessage = t("error.default_error");
+      const userMessageId = context?.tempMessageId;
+
+      if (userMessageId != null) {
+        setMessageErrorInCache(payload.sessionId, userMessageId, errorMessage);
+      }
+
+      useChatStreamStore.getState().setStream(payload.sessionId, {
+        status: "error",
+        errorType: "USER",
+        errorMessage,
+        userMessageId: userMessageId ?? null,
+        lastUserContent: payload.content,
+        content: "",
+        assistantMessageId: null,
+        riskTypeCode: null,
+        riskTypeName: null,
+      });
     },
+  });
+}
+
+// 재연결
+export function useRetryQuestion() {
+  return useMutation({
+    mutationFn: (payload: retryQuestionRequest) => retryQuestion(payload),
+    onSuccess: (data, payload) => {
+      const stream = useChatStreamStore.getState().streams[payload.sessionId];
+      clearMessageErrorInCache(payload.sessionId, payload?.messageId);
+      startChatStream(payload.sessionId, payload.messageId, {
+        force: true,
+        userMessageId: stream?.userMessageId ?? undefined,
+        userContent: stream?.lastUserContent ?? undefined,
+      });
+    },
+    onError: (error) => dev.error(error),
   });
 }

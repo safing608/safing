@@ -3,7 +3,10 @@ import {
   createChatResponse,
   getChatListResponse,
   getChatResponse,
-  sendQuestionRequest
+  retryQuestionRequest,
+  retryQuestionResponse,
+  sendQuestionRequest,
+  sendQuestionResponse,
 } from "@/types/chat";
 import { dev } from "@/utils/dev";
 import axiosInstance from "./axios";
@@ -36,7 +39,22 @@ export async function deleteChat(sessionId: number) {
 }
 
 // 기존 대화에 질문 전송
-export async function sendQuestion(payload: sendQuestionRequest) {
-  const response = await axiosInstance.post(`/chats/${payload.sessionId}/messages`, payload);
+export async function sendQuestion(
+  payload: sendQuestionRequest,
+): Promise<sendQuestionResponse> {
+  const response = await axiosInstance.post(
+    `/chats/${payload.sessionId}/messages`,
+    { content: payload.content },
+  );
+  return response?.data?.data;
+}
+
+// 질문 재전송
+export async function retryQuestion(
+  payload: retryQuestionRequest,
+): Promise<retryQuestionResponse> {
+  const response = await axiosInstance.post(
+    `/chats/${payload.sessionId}/messages/${payload.messageId}/retry`,
+  );
   return response?.data?.data;
 }

@@ -2,11 +2,15 @@ import ChatBubble from "@/components/chat/ChatBubble";
 import ChatInput, { ChatInputHandle } from "@/components/chat/ChatInput";
 import { COLORS } from "@/constants/colors";
 import { SPACING } from "@/constants/sizes";
-import { useGetChat, useSendQuestion } from "@/hooks/queries/useChat";
+import {
+  useGetChat,
+  useRetryQuestion,
+  useSendQuestion,
+} from "@/hooks/queries/useChat";
 import { useChatStream } from "@/hooks/useChatStream";
 import useKeyboard from "@/hooks/useKeyboard";
+import { useChatStreamStore } from "@/stores/chatStreamStore";
 import { useLocalSearchParams } from "expo-router";
-import { t } from "i18next";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Animated,
@@ -26,20 +30,22 @@ function ChatRoomScreen() {
   const scrollViewRef = useRef<ScrollView>(null);
   const chatInputRef = useRef<ChatInputHandle>(null);
 
-  const { id: sessionId } = useLocalSearchParams<{ id: string }>();
-  const { data: chat } = useGetChat(Number(sessionId));
+  const { id: sessionIdParam } = useLocalSearchParams<{ id: string }>();
+  const sessionId = Number(sessionIdParam);
 
+  const { data: chat } = useGetChat(sessionId);
   const { mutate: sendQuestion, isPending } = useSendQuestion();
+  const { mutate: retryQuestion } = useRetryQuestion();
 
-  // SSE
   const {
     content: streamContent,
-    status: streamStatus,
     riskTypeName: streamRiskTypeName,
-  } = useChatStream(Number(sessionId));
-
-  const isStreaming =
-    streamStatus === "connecting" || streamStatus === "streaming";
+    isStreaming,
+    stop,
+    userMessageId,
+    lastUserContent,
+    assistantMessageId,
+  } = useChatStream(sessionId);
 
   const scrollToBottom = useCallback((animated = true) => {
     requestAnimationFrame(() => {
@@ -47,25 +53,20 @@ function ChatRoomScreen() {
     });
   }, []);
 
-  // 메시지 추가/로드 시 맨 아래로
   useEffect(() => {
     if (!chat?.length) return;
     scrollToBottom(true);
   }, [chat?.length, scrollToBottom]);
 
-  // SSE 스트림 상태 변경 시 맨 아래로
   useEffect(() => {
     if (!isStreaming) return;
     scrollToBottom(false);
   }, [streamContent, isStreaming, scrollToBottom]);
 
-  // 플랫폼별 입력창 bottom 위치 계산
-  // iOS: keyboardWillShow로 미리 감지 → 애니메이션 duration 맞춰야 함
-  // Android: SafeAreaView가 감싸고 있으므로 keyboardHeight에서 paddingVertical만큼 차감
   const targetBottomPosition = isKeyboardVisible
     ? Platform.OS === "ios"
-      ? keyboardHeight // iOS: SafeAreaView 내부 좌표계에서 keyboardHeight 그대로 사용
-      : keyboardHeight - SPACING.XS // Android: paddingVertical(SPACING.XS) 상쇄
+      ? keyboardHeight
+      : keyboardHeight - SPACING.XS
     : 0;
 
   useEffect(() => {
@@ -74,20 +75,52 @@ function ChatRoomScreen() {
       duration: Platform.OS === "ios" ? 250 : 200,
       useNativeDriver: false,
     }).start();
-  }, [targetBottomPosition]);
+  }, [targetBottomPosition, animatedBottom]);
 
   const handleInputLayout = (e: LayoutChangeEvent) => {
     setInputHeight(e.nativeEvent.layout.height);
   };
 
-  // 기존 대화에 질문 전송
   const handleSendQuestion = (content: string) => {
     if (isPending || isStreaming) return;
-    sendQuestion({ sessionId: Number(sessionId), content });
+    // 이전 에러 스트림 상태 정리
+    useChatStreamStore.getState().clearStream(sessionId);
+    sendQuestion({ sessionId, content });
   };
 
-  // 실제 측정된 inputHeight + 키보드 위치 = 정확한 paddingBottom
+  const handleRetryUser = (messageId: number, content: string) => {
+    if (isPending || isStreaming) return;
+    sendQuestion({
+      sessionId,
+      content,
+      tempMessageId: messageId,
+    });
+  };
+
+  const handleRetryAssistant = (messageId?: number) => {
+    if (isPending || isStreaming) return;
+    const targetMessageId = messageId ?? assistantMessageId;
+    if (targetMessageId) {
+      retryQuestion({ sessionId, messageId: targetMessageId });
+      return;
+    }
+    if (lastUserContent) {
+      handleRetryUser(userMessageId ?? -Date.now(), lastUserContent);
+    }
+  };
+
   const scrollPaddingBottom = inputHeight + targetBottomPosition + SPACING.XS;
+
+  // 스트리밍 중이면 캐시에 이미 들어간 동일 assistant 에러 버블은 숨김
+  const visibleMessages = (chat ?? []).filter((item) => {
+    if (item.role === "ASSISTANT" && item.status === "PROCESSING") {
+      return false;
+    }
+    if (isStreaming && item.role === "ASSISTANT" && item.status === "ERROR") {
+      return item.messageId !== assistantMessageId;
+    }
+    return true;
+  });
 
   return (
     <View style={styles.container}>
@@ -102,38 +135,41 @@ function ChatRoomScreen() {
         showsVerticalScrollIndicator={false}
         onContentSizeChange={() => scrollToBottom(false)}
       >
-        {chat?.map((item) => (
-          <ChatBubble
-            key={item.messageId}
-            role={item.role as "USER" | "ASSISTANT"}
-            text={item.content as string}
-          />
-        ))}
+        {visibleMessages.map((item) => {
+          const role = item.role as "USER" | "ASSISTANT";
+          const isUser = role === "USER";
 
-        {/* 스트리밍 중인 답변을 임시 말풍선으로 표시 */}
+          return (
+            <ChatBubble
+              key={item.messageId}
+              role={role}
+              text={item.content ?? ""}
+              riskTypeName={item.riskTypeName ?? ""}
+              userError={isUser ? (item.errorMessage ?? "") : ""}
+              assistantError={
+                !isUser ? (item.errorMessage ?? "") : ""
+              }
+              onRetry={() => {
+                if (isUser) {
+                  handleRetryUser(item.messageId, item.content ?? "");
+                } else {
+                  handleRetryAssistant(item.messageId);
+                }
+              }}
+            />
+          );
+        })}
+
+        {/* 스트리밍 중인 답변 */}
         {isStreaming && (
           <ChatBubble
             role="ASSISTANT"
             text={streamContent}
-            riskTypeName={streamRiskTypeName ?? undefined}
-            // isStreaming // 타이핑 커서 같은 시각 효과 넣고 싶으면 활용
-          />
-        )}
-
-        {/* 스트리밍 실패 시 에러 표시 */}
-        {streamStatus === "error" && (
-          <ChatBubble
-            role="ASSISTANT"
-            assistantError={t("error.common_error")}
-            onRetry={() => {
-              // 재시도 로직: 마지막 유저 메시지를 다시 보내거나
-              // 별도 재시도 API가 있으면 그걸 호출
-            }}
+            riskTypeName={streamRiskTypeName ?? ""}
           />
         )}
       </ScrollView>
 
-      {/* 채팅 input 컨테이너 */}
       <Animated.View
         style={[styles.chatInputContainer, { bottom: animatedBottom }]}
         onLayout={handleInputLayout}
@@ -141,6 +177,8 @@ function ChatRoomScreen() {
         <ChatInput
           ref={chatInputRef}
           onSend={handleSendQuestion}
+          onStop={stop}
+          isStreaming={isStreaming}
           disabled={isPending}
         />
         <View style={styles.bottomSpacer} />

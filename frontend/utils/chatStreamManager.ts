@@ -7,105 +7,216 @@ import {
   ErrorEventResponse,
   MessageEventResponse,
   riskTypeEventResponse,
-} from "@/types/chat";
-import EventSource from "react-native-sse";
-import { dev } from "./dev";
+  StartChatStreamOptions,
+  streamEvent,
+} from "@/types/sse";
 import { t } from "i18next";
-import { appendMessageToCache, upsertMessageInCache } from "./chatCache";
+import EventSource from "react-native-sse";
+import {
+  clearMessageErrorInCache,
+  setMessageErrorInCache,
+  upsertMessageInCache,
+} from "./chatCache";
+import { dev } from "./dev";
 
-const activeConnections = new Map<number, EventSource>();
+function getStreamUrl(sessionId: number, messageId: number) {
+  const baseUrl = process.env.EXPO_PUBLIC_BASE_URL?.replace(/\/$/, "");
+  return `${baseUrl}/chats/${sessionId}/messages/${messageId}/stream`;
+}
 
-export const startChatStream = (sessionId: number, messageId: number) => {
-  // 이미 연결이 되어있으면 재연결 X
-  if (activeConnections.has(sessionId)) return;
+const activeConnections = new Map<number, EventSource<streamEvent>>();
 
-  dev.log("SSE 연결 생성 시도", sessionId, messageId);
+// SSE 연결 시작
+export function startChatStream(
+  sessionId: number,
+  messageId: number,
+  options: StartChatStreamOptions = {},
+) {
+  const { force = false, userMessageId, userContent } = options;
 
-  const { setStream, clearStream } = useChatStreamStore.getState();
+  if (activeConnections.has(sessionId) && !force) {
+    return;
+  }
+
+  if (activeConnections.has(sessionId)) {
+    closeConnection(sessionId);
+  }
+
+  const { setStream, clearStream, streams } = useChatStreamStore.getState();
+  const prev = streams[sessionId];
   const accessToken = useAuthStore.getState().accessToken;
 
-  // SSE 연결 생성
-  const es = new EventSource(
-    `${process.env.EXPO_PUBLIC_API_URL}/chats/${sessionId}/messages/${messageId}/stream`,
-    {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    },
-  );
+  dev.log("accessToken 존재 여부: ", !!accessToken);
 
-  // 연결 관리
-  activeConnections.set(sessionId, es);
+  const resolvedUserMessageId = userMessageId ?? prev?.userMessageId ?? null;
+  const resolvedUserContent = userContent ?? prev?.lastUserContent ?? null;
+
+  clearMessageErrorInCache(sessionId, messageId);
 
   setStream(sessionId, {
     content: "",
     status: "connecting",
     errorMessage: null,
+    errorType: null,
+    riskTypeCode: null,
+    riskTypeName: null,
+    assistantMessageId: messageId,
+    userMessageId: resolvedUserMessageId,
+    lastUserContent: resolvedUserContent,
+  });
+
+  dev.log("SSE 연결", sessionId, messageId);
+
+  const es = new EventSource<streamEvent>(getStreamUrl(sessionId, messageId), {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  activeConnections.set(sessionId, es);
+
+  let buffer = "";
+  let settled = false;
+
+  const failAssistant = (errorMessage: string) => {
+    if (settled) return;
+    settled = true;
+
+    upsertMessageInCache(sessionId, {
+      messageId,
+      status: "ERROR",
+      role: "ASSISTANT",
+      riskTypeName: null,
+      content: buffer || null,
+      errorMessage,
+    });
+
+    setStream(sessionId, {
+      status: "error",
+      errorType: "ASSISTANT",
+      errorMessage,
+      content: buffer,
+      assistantMessageId: messageId,
+      userMessageId: resolvedUserMessageId,
+      lastUserContent: resolvedUserContent,
+    });
+
+    closeConnection(sessionId);
+  };
+
+  // SSE 기본 이벤트
+  es.addEventListener("open", () => {
+    if (settled) return;
+    setStream(sessionId, { status: "streaming" });
+  });
+
+  es.addEventListener("riskType", (event) => {
+    if (settled) return;
+    try {
+      const payload: riskTypeEventResponse = JSON.parse(event.data ?? "{}");
+      dev.log("riskType 이벤트 payload:", payload);
+      setStream(sessionId, {
+        riskTypeCode: payload.riskTypeCode,
+        riskTypeName: payload.riskTypeName,
+        status: "streaming",
+      });
+    } catch (error) {
+      dev.error("riskType 이벤트 error: ", error);
+    }
+  });
+
+  es.addEventListener("message", (event) => {
+    if (settled) return;
+    try {
+      const payload: MessageEventResponse = JSON.parse(event.data ?? "{}");
+      dev.log("message 이벤트 payload:", payload);
+      buffer += payload.content ?? "";
+      setStream(sessionId, { content: buffer, status: "streaming" });
+    } catch (error) {
+      dev.error("message 이벤트 에러: ", error);
+    }
+  });
+
+  es.addEventListener("complete", (event) => {
+    if (settled) return;
+    settled = true;
+    try {
+      const payload: CompleteEventResponse = JSON.parse(event.data ?? "{}");
+
+      dev.log("complete 이벤트 payload:", payload);
+
+      upsertMessageInCache(sessionId, {
+        messageId,
+        status: "DONE",
+        role: "ASSISTANT",
+        riskTypeName: payload.riskTypeName,
+        content: payload.answer,
+        errorMessage: null,
+      });
+
+      queryClient.invalidateQueries({ queryKey: chatKeys.sessionList() });
+
+      closeConnection(sessionId);
+      clearStream(sessionId);
+    } catch (error) {
+      settled = false;
+      dev.error("complete 이벤트 에러:", error);
+      failAssistant(t("error.stream_failed"));
+    }
+  });
+
+  // 서버 event:error(JSON data) + 네트워크/연결 오류
+  es.addEventListener("error", (event) => {
+    if (settled) return;
+
+    const data = (event as { data?: string | null }).data;
+    if (data) {
+      try {
+        const payload: ErrorEventResponse = JSON.parse(data);
+        dev.log("error 이벤트: ",payload.message)
+        failAssistant(t("error.stream_failed"));
+        return;
+      } catch {
+      }
+    }
+
+    dev.error("SSE connection error", event);
+    failAssistant(t("error.stream_failed"));
+  });
+}
+
+// SSE 연결 해제
+function closeConnection(sessionId: number) {
+  const es = activeConnections.get(sessionId);
+  if (!es) return;
+  es.removeAllEventListeners();
+  es.close();
+  activeConnections.delete(sessionId);
+}
+
+// 사용자 stop — userError 표시 후 연결 종료 
+export function stopChatStream(sessionId: number) {
+  const { setStream, streams } = useChatStreamStore.getState();
+  const stream = streams[sessionId];
+
+  closeConnection(sessionId);
+
+  const errorMessage = t("error.stream_stopped");
+
+  if (stream?.userMessageId != null) {
+    setMessageErrorInCache(sessionId, stream.userMessageId, errorMessage);
+  }
+
+  setStream(sessionId, {
+    status: "stopped",
+    errorType: "USER",
+    errorMessage,
+    content: stream?.content ?? "",
     riskTypeCode: null,
     riskTypeName: null,
   });
+}
 
-  let buffer = "";
-
-  // 위험 유형 이벤트 처리
-  es.addEventListener("riskType" as any, (event: any) => {
-    dev.log("위험 유형 이벤트 처리", event.data);
-    const payload: riskTypeEventResponse = JSON.parse(event.data ?? "{}");
-    setStream(sessionId, {
-      riskTypeCode: payload.riskTypeCode,
-      riskTypeName: payload.riskTypeName,
-      status: "streaming",
-    });
-  });
-
-  // 메시지 이벤트 처리
-  es.addEventListener("message" as any, (event: any) => {
-    dev.log("메시지 이벤트 처리", event.data);
-    const payload: MessageEventResponse = JSON.parse(event.data ?? "{}");
-    dev.log("메시지 이벤트 페이로드", payload);
-    buffer += payload.content;
-    setStream(sessionId, { content: buffer });
-  });
-
-  // 완료 이벤트 처리
-  es.addEventListener("complete" as any, (event: any) => {
-    dev.log("완료 이벤트 처리", event.data);
-    const payload: CompleteEventResponse = JSON.parse(event.data ?? "{}");
-    dev.log("완료 이벤트 페이로드", payload);
-    upsertMessageInCache(sessionId, {
-      messageId,
-      status: "DONE",
-      role: "ASSISTANT",
-      riskTypeName: payload.riskTypeName,
-      content: payload.answer,
-    });
-
-    queryClient.invalidateQueries({ queryKey: chatKeys.sessionList() });
-
-    // 연결 종료
-    es.close();
-    activeConnections.delete(sessionId);
-    clearStream(sessionId);
-  });
-
-  // 에러 이벤트 처리
-  es.addEventListener("error" as any, (event: any) => {
-    dev.log("에러 이벤트 처리", event.data);
-    let errorMessage = t("error.default_error");
-    try {
-      const payload: ErrorEventResponse = JSON.parse(event.data ?? "{}");
-      errorMessage = payload.message;
-    } catch (error) {
-      dev.error(error);
-    }
-    setStream(sessionId, { errorMessage: errorMessage, status: "error" });
-    es.close();
-    activeConnections.delete(sessionId);
-  });
-};
-
-// 채팅 스트림 종료 (사용자 채팅 종료 시)
-export function stopChatStream(sessionId: number) {
-  activeConnections.get(sessionId)?.close();
-  activeConnections.delete(sessionId);
+export function isChatStreaming(sessionId: number) {
+  return activeConnections.has(sessionId);
 }

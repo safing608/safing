@@ -1,14 +1,15 @@
 import IconButton from "@/components/common/IconButton";
 import FontText from "@/components/common/FontText";
+import { markdownStyles } from "@/constants/MarkdownStyles";
 import { COLORS } from "@/constants/colors";
 import { FONT_SIZES, SPACING } from "@/constants/sizes";
 import { FontAwesome6 } from "@expo/vector-icons";
 import { Lucide } from "@react-native-vector-icons/lucide";
+import * as Clipboard from "expo-clipboard";
+import { t } from "i18next";
 import React, { useEffect, useState } from "react";
 import { StyleSheet, View, useWindowDimensions } from "react-native";
 import Markdown from "react-native-markdown-display";
-import { markdownStyles } from "@/constants/MarkdownStyles";
-import { t } from "i18next";
 
 interface ChatBubbleProps {
   role: "USER" | "ASSISTANT";
@@ -16,7 +17,6 @@ interface ChatBubbleProps {
   userError?: string;
   assistantError?: string;
   riskTypeName?: string;
-  onCopy?: () => void;
   onRetry?: () => void;
 }
 
@@ -26,7 +26,6 @@ function ChatBubble({
   riskTypeName,
   userError,
   assistantError,
-  onCopy,
   onRetry,
 }: ChatBubbleProps) {
   const { width: screenWidth } = useWindowDimensions();
@@ -34,8 +33,11 @@ function ChatBubble({
 
   const [isCopied, setIsCopied] = useState(false);
 
-  const handleCopy = () => {
-    onCopy?.();
+  const handleCopy = async () => {
+    const content = text?.trim();
+    if (!content) return;
+
+    await Clipboard.setStringAsync(content);
     setIsCopied(true);
   };
 
@@ -61,11 +63,6 @@ function ChatBubble({
         // 사용자 메시지
         <View style={styles.messageWrapper}>
           <View style={[styles.userContainer, { maxWidth: maxBubbleWidth }]}>
-            {riskTypeName && (
-              <FontText weight="light" style={styles.userText}>
-                {t("chat.risk_type_name")}: {riskTypeName}
-              </FontText>
-            )}
             <FontText weight="light" style={styles.userText}>
               {text}
             </FontText>
@@ -122,6 +119,16 @@ function ChatBubble({
       ) : (
         // AI 응답 메시지
         <View style={styles.messageWrapper}>
+          {riskTypeName && !assistantError && (
+            <FontText
+              weight="medium"
+              size={FONT_SIZES.CAPTION}
+              color={COLORS.MOEL_BLUE}
+              style={styles.riskTypeLabel}
+            >
+              ⚠️ {t("chat.risk_type_name")}: {riskTypeName}
+            </FontText>
+          )}
           <View
             style={[
               assistantError
@@ -131,7 +138,7 @@ function ChatBubble({
             ]}
           >
             {!assistantError ? (
-              <Markdown style={markdownStyles as any}>{text}</Markdown>
+              <Markdown style={markdownStyles as any}>{text || ""}</Markdown>
             ) : (
               <View style={styles.errorContainer}>
                 <FontAwesome6
@@ -147,20 +154,22 @@ function ChatBubble({
           </View>
 
           <View style={[styles.buttonRow, { justifyContent: "flex-start" }]}>
-            <IconButton
-              icon={
-                isCopied ? (
-                  <Lucide name="copy-check" size={16} color={COLORS.BLACK} />
-                ) : (
-                  <Lucide name="copy" size={16} color={COLORS.BLACK} />
-                )
-              }
-              onPress={handleCopy}
-              size="small"
-              backgroundColor={COLORS.WHITE}
-              borderColor={COLORS.LIGHT_GRAY}
-              borderWidth={1}
-            />
+            {!assistantError && (
+              <IconButton
+                icon={
+                  isCopied ? (
+                    <Lucide name="copy-check" size={16} color={COLORS.BLACK} />
+                  ) : (
+                    <Lucide name="copy" size={16} color={COLORS.BLACK} />
+                  )
+                }
+                onPress={handleCopy}
+                size="small"
+                backgroundColor={COLORS.WHITE}
+                borderColor={COLORS.LIGHT_GRAY}
+                borderWidth={1}
+              />
+            )}
             {assistantError && (
               <IconButton
                 icon={
@@ -198,6 +207,10 @@ const styles = StyleSheet.create({
   },
   messageWrapper: {
     maxWidth: "100%",
+  },
+  riskTypeLabel: {
+    marginBottom: SPACING.XS,
+    marginLeft: SPACING.XS,
   },
   userContainer: {
     backgroundColor: COLORS.MOEL_BLUE,

@@ -81,7 +81,7 @@ function ChatScreen() {
         style={[styles.chatInputContainer, { bottom: animatedBottom }]}
         onLayout={handleInputLayout}
       >
-        <ChatInput onSend={handleCreateChat} />
+        <ChatInput onSend={handleCreateChat} disabled={isPending} />
         <View style={styles.bottomSpacer} />
       </Animated.View>
     </View>

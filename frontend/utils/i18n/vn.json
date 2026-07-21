@@ -30,7 +30,9 @@
     },
     "error": {
       "common_error": "Đã xảy ra sự cố. Vui lòng thử lại sau.",
-      "default_error": "Đã xảy ra sự cố."
+      "default_error": "Đã xảy ra sự cố.",
+      "stream_stopped": "Đã dừng tạo phản hồi.",
+      "stream_failed": "Không thể tạo câu trả lời AI."
     }
   }
 }

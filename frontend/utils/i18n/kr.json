@@ -30,7 +30,9 @@
     },
     "error": {
       "common_error": "문제가 발생했습니다. 잠시 후 다시 시도해주세요.",
-      "default_error": "문제가 발생했습니다."
+      "default_error": "문제가 발생했습니다.",
+      "stream_stopped": "응답 생성이 중지되었습니다.",
+      "stream_failed": "AI 답변 생성에 실패했습니다."
     }
   }
 }
