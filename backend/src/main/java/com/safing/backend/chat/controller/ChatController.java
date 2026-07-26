@@ -50,7 +50,7 @@ public class ChatController {
     @PostMapping("/{sessionId}/messages")
     public ResponseEntity<ApiResponse<SendChatMessageResponse>> sendChatMessage (
             @AuthenticationPrincipal AuthUser authUser,
-            @PathVariable Long sessionId,
+            @PathVariable("sessionId") Long sessionId,
             @Valid @RequestBody SendChatMessageRequest request
     ){
         SendChatMessageResponse response = chatService.sendChatMessage(authUser.userId(), sessionId, request.content());
@@ -68,8 +68,8 @@ public class ChatController {
     )
     public SseEmitter streamAnswer(
             @AuthenticationPrincipal AuthUser authUser,
-            @PathVariable Long sessionId,
-            @PathVariable Long messageId
+            @PathVariable("sessionId") Long sessionId,
+            @PathVariable("messageId") Long messageId
     ){
 
         log.info("streamAnswer 컨트롤러 진입. userId={}, sessionId={}, messageId={}",
@@ -100,7 +100,7 @@ public class ChatController {
     @GetMapping("/{sessionId}")
     public ResponseEntity<ApiResponse<List<ChatDetailResponse>>> getChatDetail(
             @AuthenticationPrincipal AuthUser authUser,
-            @PathVariable Long sessionId
+            @PathVariable("sessionId") Long sessionId
     ){
         List<ChatDetailResponse> response = chatService.getChatDetail(authUser.userId(), sessionId);
 
@@ -118,7 +118,7 @@ public class ChatController {
     @DeleteMapping("/{sessionId}")
     public ResponseEntity<ApiResponse<Void>> deleteChatSession(
             @AuthenticationPrincipal AuthUser authUser,
-            @PathVariable Long sessionId
+            @PathVariable("sessionId") Long sessionId
     ){
         chatService.deleteChatSession(authUser.userId(), sessionId);
 
@@ -136,8 +136,8 @@ public class ChatController {
     @PostMapping("/{sessionId}/messages/{messageId}/retry")
     public ResponseEntity<ApiResponse<RetryMessageResponse>> retryMessage(
             @AuthenticationPrincipal AuthUser authUser,
-            @PathVariable Long sessionId,
-            @PathVariable Long messageId
+            @PathVariable("sessionId") Long sessionId,
+            @PathVariable("messageId") Long messageId
     ){
         RetryMessageResponse response =
                 chatService.retryMessage(authUser.userId(), sessionId, messageId);

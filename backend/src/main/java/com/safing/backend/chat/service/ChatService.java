@@ -120,6 +120,9 @@ public class ChatService {
                         message.getStatus(),
                         message.getRole(),
                         message.getContent(),
+                        message.getRiskType() != null
+                                ? message.getRiskType().getRiskTypeCode()
+                                :null,
                         resolveRiskTypeName(message)
                 ))
                 .toList();

@@ -292,8 +292,7 @@ public class ChatStreamService {
                             .data(new CompleteEventData(
                                     state.title,
                                     state.riskTypeCode,
-                                    state.riskTypeName,
-                                    state.answer
+                                    state.riskTypeName
                             )));
 
                     emitter.complete(); // 스트림 정상 종료
