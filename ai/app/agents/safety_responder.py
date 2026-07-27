@@ -1,6 +1,7 @@
 from app.schemas.chat import SafetyChatState, SafetyStep
 from app.schemas.safety_response import SafetyResponseResult
 from app.services.llm_safety_response_generator import LlmSafetyResponseGenerator
+from app.services.risk_type_name_resolver import RiskTypeNameResolver
 
 
 FALLBACK_MESSAGES = {
@@ -103,39 +104,16 @@ FALLBACK_MESSAGES = {
     },
 }
 
-LOCALIZED_PARENT_RISK_TYPES = {
-    "07": {
-        "ko": "끼임",
-        "en": "caught-in or entanglement",
-        "vi": "bị kẹt hoặc cuốn vào máy",
-        "ne": "मेसिनमा अड्किने वा बेरिने",
-        "km": "ជាប់ ឬ ត្រូវបានរុំចូលក្នុងម៉ាស៊ីន",
-    },
-    "09": {
-        "ko": "감전",
-        "en": "electric shock",
-        "vi": "điện giật",
-        "ne": "करेन्ट लाग्ने",
-        "km": "ឆក់អគ្គិសនី",
-    },
-    "11": {
-        "ko": "화재",
-        "en": "fire",
-        "vi": "cháy",
-        "ne": "आगो",
-        "km": "អគ្គិភ័យ",
-    },
-}
-
-
 class SafetyResponseAgent:
     name = "safety_responder"
 
     def __init__(
         self,
         response_generator: LlmSafetyResponseGenerator | None = None,
+        risk_type_name_resolver: RiskTypeNameResolver | None = None,
     ) -> None:
         self.response_generator = response_generator or LlmSafetyResponseGenerator()
+        self.risk_type_name_resolver = risk_type_name_resolver or RiskTypeNameResolver()
 
     async def run(self, state: SafetyChatState) -> SafetyChatState:
         response = self.response_generator.generate(state)
@@ -190,9 +168,12 @@ class SafetyResponseAgent:
         if state.risk_classification is None:
             return "safety" if language != "ko" else "안전"
 
-        localized = LOCALIZED_PARENT_RISK_TYPES.get(state.risk_classification.parent_risk_code)
-        if localized is not None:
-            return localized.get(language, localized["ko"])
+        localized_name = self.risk_type_name_resolver.resolve(
+            risk_type_code=state.risk_classification.parent_risk_code,
+            language=language,
+        )
+        if localized_name is not None:
+            return localized_name
 
         if language == "ko":
             return state.risk_classification.parent_risk_type
