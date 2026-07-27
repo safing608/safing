@@ -13,8 +13,9 @@ import {
 import { t } from "i18next";
 import EventSource from "react-native-sse";
 import {
-  clearMessageErrorInCache,
+  removeMessageFromCache,
   setMessageErrorInCache,
+  updateMessageInCache,
   upsertMessageInCache,
 } from "./chatCache";
 import { dev } from "./dev";
@@ -51,7 +52,13 @@ export function startChatStream(
   const resolvedUserMessageId = userMessageId ?? prev?.userMessageId ?? null;
   const resolvedUserContent = userContent ?? prev?.lastUserContent ?? null;
 
-  clearMessageErrorInCache(sessionId, messageId);
+  // 재시도/재연결 시 이전 내용 지우고 스트림 버블만 보이게
+  updateMessageInCache(sessionId, messageId, {
+    errorMessage: null,
+    status: "PROCESSING",
+    content: null,
+    riskTypeName: null,
+  });
 
   setStream(sessionId, {
     content: "",
@@ -194,7 +201,7 @@ function closeConnection(sessionId: number) {
   activeConnections.delete(sessionId);
 }
 
-// 사용자 stop — userError 표시 후 연결 종료 
+// 사용자 stop — 생성 중이던 내용이 있으면 남기고, userError 표시 후 연결 종료
 export function stopChatStream(sessionId: number) {
   const { setStream, streams } = useChatStreamStore.getState();
   const stream = streams[sessionId];
@@ -202,18 +209,36 @@ export function stopChatStream(sessionId: number) {
   closeConnection(sessionId);
 
   const errorMessage = t("error.stream_stopped");
+  const partialContent = stream?.content?.trim() ?? "";
 
   if (stream?.userMessageId != null) {
     setMessageErrorInCache(sessionId, stream.userMessageId, errorMessage);
+  }
+
+  if (stream?.assistantMessageId != null) {
+    if (partialContent) {
+      // 중간에 생성된 답변은 assistant 말풍선으로 유지
+      upsertMessageInCache(sessionId, {
+        messageId: stream.assistantMessageId,
+        status: "DONE",
+        role: "ASSISTANT",
+        riskTypeName: stream.riskTypeName,
+        content: partialContent,
+        errorMessage: null,
+      });
+    } else {
+      // 아직 내용이 없으면 PROCESSING 스텁 제거
+      removeMessageFromCache(sessionId, stream.assistantMessageId);
+    }
   }
 
   setStream(sessionId, {
     status: "stopped",
     errorType: "USER",
     errorMessage,
-    content: stream?.content ?? "",
-    riskTypeCode: null,
-    riskTypeName: null,
+    content: partialContent,
+    riskTypeCode: stream?.riskTypeCode ?? null,
+    riskTypeName: stream?.riskTypeName ?? null,
   });
 }
 

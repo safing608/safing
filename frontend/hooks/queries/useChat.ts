@@ -18,6 +18,7 @@ import {
 import {
   appendMessageToCache,
   clearMessageErrorInCache,
+  removeMessageFromCache,
   setMessageErrorInCache,
   updateMessageInCache,
 } from "@/utils/chatCache";
@@ -137,6 +138,16 @@ export function useSendQuestion() {
     // 낙관적 업데이트
     onMutate: async (variables) => {
       const tempMessageId = variables.tempMessageId ?? -Date.now();
+      const prevStream =
+        useChatStreamStore.getState().streams[variables.sessionId];
+
+      // stop/에러 후 재시도: 이전에 남긴 assistant 부분 답변 제거
+      if (prevStream?.assistantMessageId != null) {
+        removeMessageFromCache(
+          variables.sessionId,
+          prevStream.assistantMessageId,
+        );
+      }
 
       // 재시도인 경우
       if (variables.tempMessageId) {
@@ -217,15 +228,53 @@ export function useSendQuestion() {
 export function useRetryQuestion() {
   return useMutation({
     mutationFn: (payload: retryQuestionRequest) => retryQuestion(payload),
-    onSuccess: (data, payload) => {
+    onMutate: (payload) => {
+      // 이전 부분 답변/에러 내용 지우고 스트림 버블만 표시
+      updateMessageInCache(payload.sessionId, payload.messageId, {
+        errorMessage: null,
+        status: "PROCESSING",
+        content: null,
+        riskTypeName: null,
+      });
+
+      const prev = useChatStreamStore.getState().streams[payload.sessionId];
+      useChatStreamStore.getState().setStream(payload.sessionId, {
+        status: "connecting",
+        errorMessage: null,
+        errorType: null,
+        content: "",
+        riskTypeCode: null,
+        riskTypeName: null,
+        assistantMessageId: payload.messageId,
+        userMessageId: prev?.userMessageId ?? null,
+        lastUserContent: prev?.lastUserContent ?? null,
+      });
+    },
+    onSuccess: (_data, payload) => {
       const stream = useChatStreamStore.getState().streams[payload.sessionId];
-      clearMessageErrorInCache(payload.sessionId, payload?.messageId);
+
+      // stop 된 경우 스트림 시작하지 않음
+      if (stream?.status === "stopped") {
+        return;
+      }
+
       startChatStream(payload.sessionId, payload.messageId, {
         force: true,
         userMessageId: stream?.userMessageId ?? undefined,
         userContent: stream?.lastUserContent ?? undefined,
       });
     },
-    onError: (error) => dev.error(error),
+    onError: (error, payload) => {
+      dev.error(error);
+      const errorMessage = t("error.stream_failed");
+      setMessageErrorInCache(payload.sessionId, payload.messageId, errorMessage);
+      useChatStreamStore.getState().setStream(payload.sessionId, {
+        status: "error",
+        errorType: "ASSISTANT",
+        errorMessage,
+        assistantMessageId: payload.messageId,
+        content: "",
+      });
+    },
   });
 }

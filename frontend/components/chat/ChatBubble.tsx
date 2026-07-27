@@ -18,6 +18,8 @@ interface ChatBubbleProps {
   assistantError?: string;
   riskTypeName?: string;
   onRetry?: () => void;
+  /** 재시도/스트리밍 중 중복 요청 방지 */
+  retryDisabled?: boolean;
 }
 
 function ChatBubble({
@@ -27,6 +29,7 @@ function ChatBubble({
   userError,
   assistantError,
   onRetry,
+  retryDisabled = false,
 }: ChatBubbleProps) {
   const { width: screenWidth } = useWindowDimensions();
   const maxBubbleWidth = screenWidth * 0.7;
@@ -42,6 +45,7 @@ function ChatBubble({
   };
 
   const handleRetry = () => {
+    if (retryDisabled) return;
     onRetry?.();
   };
 
@@ -104,10 +108,13 @@ function ChatBubble({
                   <Lucide
                     name="refresh-cw"
                     size={16}
-                    color={COLORS.MOEL_BLUE}
+                    color={
+                      retryDisabled ? COLORS.MOEL_DARK_GRAY : COLORS.MOEL_BLUE
+                    }
                   />
                 }
                 onPress={handleRetry}
+                disabled={retryDisabled}
                 size="small"
                 backgroundColor={COLORS.WHITE}
                 borderColor={COLORS.LIGHT_GRAY}
@@ -176,10 +183,13 @@ function ChatBubble({
                   <Lucide
                     name="refresh-cw"
                     size={16}
-                    color={COLORS.MOEL_BLUE}
+                    color={
+                      retryDisabled ? COLORS.MOEL_DARK_GRAY : COLORS.MOEL_BLUE
+                    }
                   />
                 }
                 onPress={handleRetry}
+                disabled={retryDisabled}
                 size="small"
                 backgroundColor={COLORS.WHITE}
                 borderColor={COLORS.LIGHT_GRAY}

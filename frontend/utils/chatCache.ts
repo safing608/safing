@@ -80,3 +80,11 @@ export function clearMessageErrorInCache(
     status: "DONE",
   });
 }
+
+/** 캐시에서 메시지 제거 */
+export function removeMessageFromCache(sessionId: number, messageId: number) {
+  queryClient.setQueryData<getChatResponse>(
+    chatKeys.session(sessionId),
+    (prev) => (prev ?? []).filter((item) => item.messageId !== messageId),
+  );
+}

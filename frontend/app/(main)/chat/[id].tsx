@@ -34,8 +34,9 @@ function ChatRoomScreen() {
   const sessionId = Number(sessionIdParam);
 
   const { data: chat } = useGetChat(sessionId);
-  const { mutate: sendQuestion, isPending } = useSendQuestion();
-  const { mutate: retryQuestion } = useRetryQuestion();
+  const { mutate: sendQuestion, isPending: isSendPending } = useSendQuestion();
+  const { mutate: retryQuestion, isPending: isRetryPending } =
+    useRetryQuestion();
 
   const {
     content: streamContent,
@@ -46,6 +47,8 @@ function ChatRoomScreen() {
     lastUserContent,
     assistantMessageId,
   } = useChatStream(sessionId);
+
+  const isBusy = isSendPending || isRetryPending || isStreaming;
 
   const scrollToBottom = useCallback((animated = true) => {
     requestAnimationFrame(() => {
@@ -82,14 +85,14 @@ function ChatRoomScreen() {
   };
 
   const handleSendQuestion = (content: string) => {
-    if (isPending || isStreaming) return;
+    if (isBusy) return;
     // 이전 에러 스트림 상태 정리
     useChatStreamStore.getState().clearStream(sessionId);
     sendQuestion({ sessionId, content });
   };
 
   const handleRetryUser = (messageId: number, content: string) => {
-    if (isPending || isStreaming) return;
+    if (isBusy) return;
     sendQuestion({
       sessionId,
       content,
@@ -98,7 +101,7 @@ function ChatRoomScreen() {
   };
 
   const handleRetryAssistant = (messageId?: number) => {
-    if (isPending || isStreaming) return;
+    if (isBusy) return;
     const targetMessageId = messageId ?? assistantMessageId;
     if (targetMessageId) {
       retryQuestion({ sessionId, messageId: targetMessageId });
@@ -111,13 +114,16 @@ function ChatRoomScreen() {
 
   const scrollPaddingBottom = inputHeight + targetBottomPosition + SPACING.XS;
 
-  // 스트리밍 중이면 캐시에 이미 들어간 동일 assistant 에러 버블은 숨김
+  // PROCESSING / 현재 스트리밍 중인 assistant는 캐시 버블 숨김 (스트림 버블만 표시)
   const visibleMessages = (chat ?? []).filter((item) => {
-    if (item.role === "ASSISTANT" && item.status === "PROCESSING") {
+    if (item.role !== "ASSISTANT") return true;
+    if (item.status === "PROCESSING") return false;
+    if (
+      isStreaming &&
+      assistantMessageId != null &&
+      item.messageId === assistantMessageId
+    ) {
       return false;
-    }
-    if (isStreaming && item.role === "ASSISTANT" && item.status === "ERROR") {
-      return item.messageId !== assistantMessageId;
     }
     return true;
   });
@@ -149,6 +155,7 @@ function ChatRoomScreen() {
               assistantError={
                 !isUser ? (item.errorMessage ?? "") : ""
               }
+              retryDisabled={isBusy}
               onRetry={() => {
                 if (isUser) {
                   handleRetryUser(item.messageId, item.content ?? "");
@@ -179,7 +186,7 @@ function ChatRoomScreen() {
           onSend={handleSendQuestion}
           onStop={stop}
           isStreaming={isStreaming}
-          disabled={isPending}
+          disabled={isBusy && !isStreaming}
         />
         <View style={styles.bottomSpacer} />
       </Animated.View>
