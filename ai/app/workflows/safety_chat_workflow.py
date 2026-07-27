@@ -1,18 +1,24 @@
 from collections.abc import AsyncIterator
 from functools import lru_cache
+import logging
 
 from app.agents.rag_searcher import RagSearchAgent
 from app.agents.risk_classifier import RiskClassificationAgent
 from app.agents.safety_responder import SafetyResponseAgent
 from app.rag.accident_code_loader import AccidentCodeLoader
 from app.schemas.chat import ChatRequest, SafetyChatState
+from app.schemas.error import ErrorCode, error_message_for
 from app.schemas.sse import (
     DoneEvent,
+    ErrorEvent,
     FinalAnswerEvent,
     RiskClassificationEvent,
     SafetyStepEvent,
     format_sse,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 class SafetyChatWorkflow:
@@ -30,12 +36,31 @@ class SafetyChatWorkflow:
 
     async def stream(self, request: ChatRequest) -> AsyncIterator[str]:
         state = self._build_initial_state(request)
-        state = await self.risk_classifier.run(state)
-        state = await self.rag_searcher.run(state)
-        state = await self.safety_responder.run(state)
+
+        try:
+            state = await self.risk_classifier.run(state)
+        except Exception:
+            logger.exception("Risk classification failed.")
+            yield self._error_sse(ErrorCode.RISK_CLASSIFICATION_FAILED)
+            return
+
+        try:
+            state = await self.rag_searcher.run(state)
+        except Exception:
+            logger.exception("RAG retrieval failed.")
+            yield self._error_sse(ErrorCode.RAG_RETRIEVAL_FAILED)
+            return
+
+        try:
+            state = await self.safety_responder.run(state)
+        except Exception:
+            logger.exception("Safety response generation failed.")
+            yield self._error_sse(ErrorCode.LLM_GENERATION_FAILED)
+            return
 
         if state.risk_classification is None:
-            raise RuntimeError("Risk classification was not produced.")
+            yield self._error_sse(ErrorCode.RISK_CLASSIFICATION_FAILED)
+            return
 
         yield format_sse(
             "risk_classification",
@@ -57,6 +82,12 @@ class SafetyChatWorkflow:
             ),
         )
         yield format_sse("done", DoneEvent())
+
+    def _error_sse(self, code: ErrorCode) -> str:
+        return format_sse(
+            "error",
+            ErrorEvent(code=code, message=error_message_for(code)),
+        )
 
     def _build_initial_state(self, request: ChatRequest) -> SafetyChatState:
         return SafetyChatState(
