@@ -4,6 +4,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 from app.schemas.chat import RetrievedSource
+from app.schemas.error import ErrorCode
 
 
 SseEventName = Literal[
@@ -35,7 +36,7 @@ class DoneEvent(BaseModel):
 
 
 class ErrorEvent(BaseModel):
-    code: str
+    code: ErrorCode
     message: str
 
 
