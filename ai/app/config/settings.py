@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg://safing:Safing%212026_Postgres@localhost:5432/safing"
     open_api_key: str | None = Field(default=None, validation_alias="OPEN_API_KEY")
     openai_risk_model: str = "gpt-5-mini"
+    openai_safety_model: str = "gpt-5-nano"
     openai_api_base_url: str = "https://api.openai.com/v1"
     openai_timeout_seconds: float = 30.0
 
