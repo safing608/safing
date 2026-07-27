@@ -31,6 +31,17 @@ class RetrievedSource(BaseModel):
     document_name: str | None = Field(default=None, alias="documentName")
 
 
+class RetrievedChunk(BaseModel):
+    id: int
+    content: str
+    score: float
+    source: RetrievedSource
+    risk_codes: list[str] = Field(default_factory=list)
+    parent_risk_codes: list[str] = Field(default_factory=list)
+    risk_types: list[str] = Field(default_factory=list)
+    parent_risk_types: list[str] = Field(default_factory=list)
+
+
 class SafetyStep(BaseModel):
     index: int
     text: str
@@ -44,6 +55,7 @@ class SafetyChatState(BaseModel):
     source_language: str | None = None
     normalized_message: str | None = None
     risk_classification: RiskClassification | None = None
+    retrieved_chunks: list[RetrievedChunk] = Field(default_factory=list)
     safety_steps: list[SafetyStep] = Field(default_factory=list)
     final_answer: str | None = None
     translated_answer: str | None = None
