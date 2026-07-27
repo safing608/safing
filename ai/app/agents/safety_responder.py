@@ -47,7 +47,7 @@ class SafetyResponseAgent:
         )
         top_chunk = state.retrieved_chunks[0]
         document_name = top_chunk.source.document_name or "검색된 안전 문서"
-        evidence_summary = " ".join(top_chunk.content.split())[:180]
+        evidence_summary = self._summarize_evidence(top_chunk.content)
 
         return SafetyResponseResult(
             safetySteps=[
@@ -58,8 +58,20 @@ class SafetyResponseAgent:
             ],
             answer=(
                 f"{risk_type} 위험이 의심됩니다. 작업을 즉시 중지하고 관리자 또는 안전 담당자에게 "
-                f"보고하세요. 검색된 문서 '{document_name}'에서 확인된 관련 내용은 "
-                f"'{evidence_summary}'입니다. 문서 근거가 더 필요하면 현장 안전 담당자의 "
+                f"보고하세요. 검색된 문서 '{document_name}'에서 {evidence_summary} "
+                "문서 근거가 더 필요하면 현장 안전 담당자의 "
                 "확인을 받은 뒤 후속 조치를 진행하세요."
             ),
         )
+
+    def _summarize_evidence(self, content: str) -> str:
+        normalized = " ".join(content.split())
+        if "방호장치" in normalized:
+            return "방호장치와 기계ㆍ설비 작업점의 위험을 확인했습니다."
+        if "전원" in normalized or "감전" in normalized:
+            return "전기 위험과 전원 차단 관련 내용을 확인했습니다."
+        if "화재" in normalized or "소화" in normalized:
+            return "화재 대응과 소화 관련 내용을 확인했습니다."
+        if "보호구" in normalized:
+            return "보호구 착용과 안전 조치 관련 내용을 확인했습니다."
+        return "관련 안전 조치 내용을 확인했습니다."
