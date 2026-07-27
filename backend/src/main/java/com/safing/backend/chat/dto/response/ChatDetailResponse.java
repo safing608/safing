@@ -8,6 +8,7 @@ public record ChatDetailResponse(
         ChatMessageStatus status,
         ChatMessageRole role,
         String content,
+        String riskTypeCode,
         String riskTypeName
 ) {
 }
