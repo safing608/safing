@@ -9,6 +9,15 @@ from app.schemas.chat import RetrievedChunk, SafetyChatState
 from app.schemas.safety_response import SafetyResponseResult
 
 
+TARGET_LANGUAGE_NAMES = {
+    "ko": "Korean",
+    "en": "English",
+    "vi": "Vietnamese",
+    "ne": "Nepali",
+    "km": "Khmer",
+}
+
+
 class LlmSafetyResponseGenerator:
     def __init__(
         self,
@@ -33,6 +42,7 @@ class LlmSafetyResponseGenerator:
             return None
 
     def _request(self, state: SafetyChatState) -> str:
+        target_language_name = TARGET_LANGUAGE_NAMES.get(state.target_language, "Korean")
         payload = {
             "model": self.model,
             "input": [
@@ -40,12 +50,13 @@ class LlmSafetyResponseGenerator:
                     "role": "system",
                     "content": (
                         "You are an industrial safety assistant for foreign workers. "
-                        "Answer in Korean for now. Use only the provided retrieved safety document chunks. "
+                        f"Answer in {target_language_name}. "
+                        "Use only the provided retrieved safety document chunks. "
                         "Do not guess or add procedures that are not supported by the chunks. "
                         "Prioritize immediate action: stop work, move away if possible, report to a supervisor "
                         "or safety manager, then provide additional safety steps. "
                         "If the chunks are insufficient, say the evidence is insufficient and advise stopping "
-                        "work and contacting a supervisor."
+                        "work and contacting a supervisor. Preserve warnings and keep sentences short."
                     ),
                 },
                 {
@@ -59,11 +70,14 @@ class LlmSafetyResponseGenerator:
                                 else None
                             ),
                             "retrievedChunks": self._format_chunks(state.retrieved_chunks),
+                            "targetLanguage": state.target_language,
+                            "targetLanguageName": target_language_name,
                             "responseRules": [
                                 "Keep each sentence short and clear.",
                                 "Return 3 to 5 action steps.",
                                 "The answer must be grounded only in retrievedChunks.",
                                 "Do not mention unsupported technical details.",
+                                f"Write safetySteps and answer in {target_language_name}.",
                             ],
                         },
                         ensure_ascii=False,
