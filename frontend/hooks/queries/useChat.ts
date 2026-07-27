@@ -113,7 +113,7 @@ export function useDeleteChat() {
         type: "success",
       });
 
-      router.push("/chat");
+      router.replace("/chat");
     },
     onError: (error) => {
       dev.error("대화 삭제 실패", error);

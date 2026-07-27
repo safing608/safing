@@ -152,12 +152,24 @@ export function startChatStream(
 
       dev.log("complete 이벤트 payload:", payload);
 
+      // upsertMessageInCache(sessionId, {
+      //   messageId,
+      //   status: "DONE",
+      //   role: "ASSISTANT",
+      //   riskTypeName: payload.riskTypeName,
+      //   content: payload.answer,
+      //   errorMessage: null,
+      // });
+
+      const stream = useChatStreamStore.getState().streams[sessionId];
+
+      // 완료 시 상태만 업데이트(이전 Message 내용 유지)
       upsertMessageInCache(sessionId, {
         messageId,
         status: "DONE",
         role: "ASSISTANT",
-        riskTypeName: payload.riskTypeName,
-        content: payload.answer,
+        riskTypeName: stream.riskTypeName,
+        content: stream.content,
         errorMessage: null,
       });
 
@@ -180,11 +192,10 @@ export function startChatStream(
     if (data) {
       try {
         const payload: ErrorEventResponse = JSON.parse(data);
-        dev.log("error 이벤트: ",payload.message)
+        dev.log("error 이벤트: ", payload.message);
         failAssistant(t("error.stream_failed"));
         return;
-      } catch {
-      }
+      } catch {}
     }
 
     dev.error("SSE connection error", event);
