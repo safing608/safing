@@ -3,7 +3,7 @@ import { chatKeys } from "@/constants/queryKeys";
 import { getChatResponse } from "@/types/chat";
 import { CachedChatMessage } from "@/types/sse";
 
-// 메시지 추가 
+// 메시지 추가
 export function appendMessageToCache(
   sessionId: number,
   message: CachedChatMessage,
@@ -14,7 +14,7 @@ export function appendMessageToCache(
   );
 }
 
-// messageId가 있으면 교체, 없으면 추가 
+// messageId가 있으면 교체, 없으면 추가
 export function upsertMessageInCache(
   sessionId: number,
   message: CachedChatMessage,
@@ -38,7 +38,7 @@ export function upsertMessageInCache(
   );
 }
 
-// 특정 메시지 부분 업데이트 
+// 특정 메시지 부분 업데이트
 export function updateMessageInCache(
   sessionId: number,
   messageId: number,
@@ -70,18 +70,22 @@ export function setMessageErrorInCache(
   });
 }
 
-// 에러 상태 제거 
-export function clearMessageErrorInCache(
-  sessionId: number,
-  messageId: number,
-) {
+// 에러 상태 제거
+export function clearMessageErrorInCache(sessionId: number, messageId: number) {
   updateMessageInCache(sessionId, messageId, {
     errorMessage: null,
     status: "DONE",
   });
 }
 
-/** 캐시에서 메시지 제거 */
+// 에러 상태 유지, retry 버튼 막음
+export function markMessageAsPastError(sessionId: number, messageId: number) {
+  updateMessageInCache(sessionId, messageId, {
+    retryable: false, 
+  });
+}
+
+// 캐시에서 메시지 제거
 export function removeMessageFromCache(sessionId: number, messageId: number) {
   queryClient.setQueryData<getChatResponse>(
     chatKeys.session(sessionId),

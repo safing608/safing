@@ -94,6 +94,7 @@ export function startChatStream(
       status: "ERROR",
       role: "ASSISTANT",
       riskTypeName: null,
+      riskTypeCode:null,
       content: buffer || null,
       errorMessage,
     });
@@ -169,6 +170,7 @@ export function startChatStream(
         status: "DONE",
         role: "ASSISTANT",
         riskTypeName: stream.riskTypeName,
+        riskTypeCode:stream.riskTypeCode,
         content: stream.content,
         errorMessage: null,
       });
@@ -234,6 +236,7 @@ export function stopChatStream(sessionId: number) {
         status: "DONE",
         role: "ASSISTANT",
         riskTypeName: stream.riskTypeName,
+        riskTypeCode: stream.riskTypeCode,
         content: partialContent,
         errorMessage: null,
       });

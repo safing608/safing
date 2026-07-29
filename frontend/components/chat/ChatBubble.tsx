@@ -10,31 +10,39 @@ import { t } from "i18next";
 import React, { useEffect, useState } from "react";
 import { StyleSheet, View, useWindowDimensions } from "react-native";
 import Markdown from "react-native-markdown-display";
+import { dev } from "@/utils/dev";
 
 interface ChatBubbleProps {
   role: "USER" | "ASSISTANT";
   text?: string;
+  status?: string;
   userError?: string;
   assistantError?: string;
+  riskTypeCode?: string;
   riskTypeName?: string;
   onRetry?: () => void;
-  /** 재시도/스트리밍 중 중복 요청 방지 */
-  retryDisabled?: boolean;
+  retryable?: boolean;
+  retryDisabled?: boolean; // 재시도/스트리밍 중 중복 요청 방지
 }
 
 function ChatBubble({
   role,
   text,
+  status,
+  riskTypeCode,
   riskTypeName,
   userError,
   assistantError,
   onRetry,
+  retryable = true,
   retryDisabled = false,
 }: ChatBubbleProps) {
   const { width: screenWidth } = useWindowDimensions();
   const maxBubbleWidth = screenWidth * 0.7;
 
   const [isCopied, setIsCopied] = useState(false);
+
+  const isFailedWithNoContent = status === "FAILED" && !text;
 
   const handleCopy = async () => {
     const content = text?.trim();
@@ -74,13 +82,13 @@ function ChatBubble({
 
           {/* 사용자 에러 메시지 */}
           {userError && (
-            <View style={[styles.errorContainer, styles.userErrorContainer]}>
+            <View style={[styles.errorContainer]}>
               <FontAwesome6
                 name="circle-exclamation"
                 size={12}
                 color={COLORS.ERROR_RED}
               />
-              <FontText weight="light" style={styles.userErrorText}>
+              <FontText weight="light" style={styles.errorText}>
                 {userError}
               </FontText>
             </View>
@@ -126,7 +134,7 @@ function ChatBubble({
       ) : (
         // AI 응답 메시지
         <View style={styles.messageWrapper}>
-          {riskTypeName && !assistantError && (
+          {!!riskTypeCode && riskTypeCode !== "Z" && (
             <FontText
               weight="medium"
               size={FONT_SIZES.CAPTION}
@@ -136,67 +144,96 @@ function ChatBubble({
               ⚠️ {t("chat.risk_type_name")}: {riskTypeName}
             </FontText>
           )}
-          <View
-            style={[
-              assistantError
-                ? styles.assistantErrorContainer
-                : styles.assistantContainer,
-              { maxWidth: maxBubbleWidth },
-            ]}
-          >
-            {!assistantError ? (
-              <Markdown style={markdownStyles as any}>{text || ""}</Markdown>
-            ) : (
-              <View style={styles.errorContainer}>
+          {isFailedWithNoContent ? (
+            // [DB] FAILED 전용 컨테이너
+            <View
+              style={[
+                styles.assistantErrorContainer,
+                { maxWidth: maxBubbleWidth },
+              ]}
+            >
+              <View style={styles.assistantErrorContent}>
                 <FontAwesome6
                   name="circle-exclamation"
                   size={12}
                   color={COLORS.ERROR_RED}
                 />
                 <FontText weight="light" style={styles.assistantErrorText}>
-                  {assistantError}
+                  {t("error.stream_failed")}
                 </FontText>
               </View>
-            )}
-          </View>
+            </View>
+          ) : (
+            // [DB 및 Streaming] 정상 답변 및 스트리밍 중 에러 표시
+            <>
+              <View
+                style={[
+                  styles.assistantContainer,
+                  { maxWidth: maxBubbleWidth },
+                ]}
+              >
+                <Markdown style={markdownStyles as any}>{text || ""}</Markdown>
+              </View>
 
-          <View style={[styles.buttonRow, { justifyContent: "flex-start" }]}>
-            {!assistantError && (
-              <IconButton
-                icon={
-                  isCopied ? (
-                    <Lucide name="copy-check" size={16} color={COLORS.BLACK} />
-                  ) : (
-                    <Lucide name="copy" size={16} color={COLORS.BLACK} />
-                  )
-                }
-                onPress={handleCopy}
-                size="small"
-                backgroundColor={COLORS.WHITE}
-                borderColor={COLORS.LIGHT_GRAY}
-                borderWidth={1}
-              />
-            )}
-            {assistantError && (
-              <IconButton
-                icon={
-                  <Lucide
-                    name="refresh-cw"
-                    size={16}
-                    color={
-                      retryDisabled ? COLORS.MOEL_DARK_GRAY : COLORS.MOEL_BLUE
-                    }
+              {assistantError && (
+                <View style={styles.errorContainer}>
+                  <FontAwesome6
+                    name="circle-exclamation"
+                    size={12}
+                    color={COLORS.ERROR_RED}
                   />
-                }
-                onPress={handleRetry}
-                disabled={retryDisabled}
-                size="small"
-                backgroundColor={COLORS.WHITE}
-                borderColor={COLORS.LIGHT_GRAY}
-                borderWidth={1}
-              />
-            )}
-          </View>
+                  <FontText weight="light" style={styles.errorText}>
+                    {assistantError}
+                  </FontText>
+                </View>
+              )}
+
+              {/* 어시스턴스 메시지 복사 및 재시도 버튼*/}
+              <View
+                style={[styles.buttonRow, { justifyContent: "flex-start" }]}
+              >
+                <IconButton
+                  icon={
+                    isCopied ? (
+                      <Lucide
+                        name="copy-check"
+                        size={16}
+                        color={COLORS.BLACK}
+                      />
+                    ) : (
+                      <Lucide name="copy" size={16} color={COLORS.BLACK} />
+                    )
+                  }
+                  onPress={handleCopy}
+                  size="small"
+                  backgroundColor={COLORS.WHITE}
+                  borderColor={COLORS.LIGHT_GRAY}
+                  borderWidth={1}
+                />
+                {assistantError && retryable && (
+                  <IconButton
+                    icon={
+                      <Lucide
+                        name="refresh-cw"
+                        size={16}
+                        color={
+                          retryDisabled
+                            ? COLORS.MOEL_DARK_GRAY
+                            : COLORS.MOEL_BLUE
+                        }
+                      />
+                    }
+                    onPress={handleRetry}
+                    disabled={retryDisabled}
+                    size="small"
+                    backgroundColor={COLORS.WHITE}
+                    borderColor={COLORS.LIGHT_GRAY}
+                    borderWidth={1}
+                  />
+                )}
+              </View>
+            </>
+          )}
         </View>
       )}
     </View>
@@ -238,6 +275,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.LIGHT_GRAY,
   },
   assistantErrorContainer: {
+    backgroundColor: COLORS.WHITE,
     padding: SPACING.MEDIUM,
     borderRadius: 18,
     borderBottomLeftRadius: 4,
@@ -249,15 +287,18 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZES.BODY,
     lineHeight: 22,
   },
-  userErrorContainer: {
-    marginVertical: SPACING.SMALL,
-  },
   errorContainer: {
     flexDirection: "row",
     alignItems: "center",
     gap: SPACING.XS,
+    marginVertical: SPACING.SMALL,
   },
-  userErrorText: {
+  assistantErrorContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: SPACING.XS,
+  },
+  errorText: {
     fontSize: FONT_SIZES.CAPTION,
     color: COLORS.ERROR_RED,
     flexShrink: 1,

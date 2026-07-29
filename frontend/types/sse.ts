@@ -25,6 +25,7 @@ export interface StreamEntry {
 
 export type CachedChatMessage = getChatItem & {
     errorMessage?: string | null;
+    retryable?: boolean; 
   };
   
 export type StartChatStreamOptions = {

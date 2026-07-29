@@ -12,8 +12,10 @@ export interface getChatItem {
   status: string;
   role: string;
   content: string | null;
+  riskTypeCode: string | null;
   riskTypeName: string | null;
   errorMessage?: string | null;
+  retryable?: boolean;
 }
 
 export type getChatResponse = getChatItem[];

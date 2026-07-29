@@ -163,6 +163,7 @@ export function useSendQuestion() {
           role: "USER",
           status: "DONE",
           riskTypeName: null,
+          riskTypeCode: null,
           content: variables.content,
           errorMessage: null,
         });
@@ -267,7 +268,11 @@ export function useRetryQuestion() {
     onError: (error, payload) => {
       dev.error(error);
       const errorMessage = t("error.stream_failed");
-      setMessageErrorInCache(payload.sessionId, payload.messageId, errorMessage);
+      setMessageErrorInCache(
+        payload.sessionId,
+        payload.messageId,
+        errorMessage,
+      );
       useChatStreamStore.getState().setStream(payload.sessionId, {
         status: "error",
         errorType: "ASSISTANT",

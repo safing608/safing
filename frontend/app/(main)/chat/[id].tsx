@@ -10,6 +10,11 @@ import {
 import { useChatStream } from "@/hooks/useChatStream";
 import useKeyboard from "@/hooks/useKeyboard";
 import { useChatStreamStore } from "@/stores/chatStreamStore";
+import {
+  clearMessageErrorInCache,
+  markMessageAsPastError,
+} from "@/utils/chatCache";
+import { dev } from "@/utils/dev";
 import { useLocalSearchParams } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -41,6 +46,7 @@ function ChatRoomScreen() {
   const {
     content: streamContent,
     riskTypeName: streamRiskTypeName,
+    riskTypeCode: streamRiskTypeCode,
     isStreaming,
     stop,
     userMessageId,
@@ -86,6 +92,19 @@ function ChatRoomScreen() {
 
   const handleSendQuestion = (content: string) => {
     if (isBusy) return;
+
+    const stream = useChatStreamStore.getState().streams[sessionId];
+
+    if (stream?.userMessageId != null) {
+      clearMessageErrorInCache(sessionId, stream.userMessageId);
+    }
+
+    if (stream?.assistantMessageId != null) {
+      dev.log(stream.assistantMessageId);
+      // clearMessageErrorInCache(sessionId, stream.assistantMessageId);
+      markMessageAsPastError(sessionId, stream.assistantMessageId);
+    }
+
     // 이전 에러 스트림 상태 정리
     useChatStreamStore.getState().clearStream(sessionId);
     sendQuestion({ sessionId, content });
@@ -144,18 +163,18 @@ function ChatRoomScreen() {
         {visibleMessages.map((item) => {
           const role = item.role as "USER" | "ASSISTANT";
           const isUser = role === "USER";
-
           return (
             <ChatBubble
               key={item.messageId}
               role={role}
               text={item.content ?? ""}
               riskTypeName={item.riskTypeName ?? ""}
+              riskTypeCode={item.riskTypeCode ?? ""}
+              status={item.status ?? ""}
               userError={isUser ? (item.errorMessage ?? "") : ""}
-              assistantError={
-                !isUser ? (item.errorMessage ?? "") : ""
-              }
+              assistantError={!isUser ? (item.errorMessage ?? "") : ""}
               retryDisabled={isBusy}
+              retryable={item.retryable ?? true}
               onRetry={() => {
                 if (isUser) {
                   handleRetryUser(item.messageId, item.content ?? "");
@@ -173,6 +192,7 @@ function ChatRoomScreen() {
             role="ASSISTANT"
             text={streamContent}
             riskTypeName={streamRiskTypeName ?? ""}
+            riskTypeCode={streamRiskTypeCode ?? ""}
           />
         )}
       </ScrollView>
