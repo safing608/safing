@@ -114,28 +114,28 @@ export default function ComponentsGallery() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>ChatBubble</Text>
         <View style={styles.chatContainer}>
-          <ChatBubble role="user" text="안전모를 착용해야 하나요?" />
+          <ChatBubble role="USER" text="안전모를 착용해야 하나요?" />
           <ChatBubble
-            role="assistant"
+            role="ASSISTANT"
             text="네, 작업 현장에서는 반드시 안전모를 착용해야 합니다. 낙하물로부터 머리를 보호하기 위해 필수적입니다."
           />
-          <ChatBubble role="user" text="화학물질 취급할 때 주의사항은?" />
+          <ChatBubble role="USER" text="화학물질 취급할 때 주의사항은?" />
           <ChatBubble
-            role="assistant"
+            role="ASSISTANT"
             text="화학물질 취급 시에는 보호장갑, 보호안경, 마스크를 착용하고 환기가 잘 되는 곳에서 작업하세요. MSDS(물질안전보건자료)를 꼭 확인하시기 바랍니다."
           />
           <ChatBubble
-            role="user"
+            role="USER"
             text="에러 테스트"
             userError="네트워크 연결을 확인해주세요"
           />
           <ChatBubble
-            role="assistant"
+            role="ASSISTANT"
             text="서버 연결 실패"
             assistantError="응답 생성 중 오류 발생"
           />
           <ChatBubble
-            role="assistant"
+            role="ASSISTANT"
             text="서버 연결 실패"
             assistantError="응답 생성 중 오류 발생"
             onRetry={() => console.log("Retry clicked")}
@@ -508,14 +508,14 @@ export default function ComponentsGallery() {
       </View>
 
       {/* ChatDrawer - 테스트용 */}
-      <ChatDrawer
+      {/* <ChatDrawer
         visible={drawerVisible}
         onClose={handleDrawerClose}
         onNewChat={handleNewChat}
         onLanguageChange={handleLanguageChange}
         onChatHistory={handleChatHistory}
         onSettings={handleSetting}
-      />
+      /> */}
     </ScrollView>
   );
 }
