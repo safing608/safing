@@ -6,7 +6,10 @@
       "input_placeholder": "Please enter your question.",
       "drawer_new_chat": "New Chat",
       "drawer_language": "Change Language",
-      "drawer_chat_history": "Chat History"
+      "drawer_chat_history": "Chat History",
+      "risk_type_name": "Risk Type",
+      "delete_chat_success": "The chat has been deleted.",
+      "delete_chat_failed": "Failed to delete the chat."
     },
     "language": {
       "select_language": "Please select a language.",
@@ -26,7 +29,10 @@
       "confirm": "Confirm"
     },
     "error": {
-      "common_error": "Something went wrong. Please try again later."
+      "common_error": "Something went wrong. Please try again later.",
+      "default_error": "Something went wrong.",
+      "stream_stopped": "Response generation was stopped.",
+      "stream_failed": "Failed to generate an AI response."
     }
   }
 }

@@ -2,6 +2,7 @@ import ChatInput from "@/components/chat/ChatInput";
 import FontText from "@/components/common/FontText";
 import { COLORS } from "@/constants/colors";
 import { FONT_SIZES, SPACING } from "@/constants/sizes";
+import { useCreateChat } from "@/hooks/queries/useChat";
 import useKeyboard from "@/hooks/useKeyboard";
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -13,11 +14,10 @@ import {
   View,
 } from "react-native";
 
-interface ChatScreenProps {}
-
-function ChatScreen({}: ChatScreenProps) {
+function ChatScreen() {
   const { isKeyboardVisible, keyboardHeight } = useKeyboard();
   const { t } = useTranslation();
+  const { mutate: createChat, isPending } = useCreateChat();
 
   const [inputHeight, setInputHeight] = useState(0);
 
@@ -40,8 +40,15 @@ function ChatScreen({}: ChatScreenProps) {
     }).start();
   }, [targetBottomPosition]);
 
+  // input 레이아웃 변경 시 높이 저장
   const handleInputLayout = (e: LayoutChangeEvent) => {
     setInputHeight(e.nativeEvent.layout.height);
+  };
+
+  // input 전송 시 대화 생성
+  const handleCreateChat = (content: string) => {
+    if (isPending) return;
+    createChat({ content });
   };
 
   return (
@@ -74,7 +81,7 @@ function ChatScreen({}: ChatScreenProps) {
         style={[styles.chatInputContainer, { bottom: animatedBottom }]}
         onLayout={handleInputLayout}
       >
-        <ChatInput />
+        <ChatInput onSend={handleCreateChat} disabled={isPending} />
         <View style={styles.bottomSpacer} />
       </Animated.View>
     </View>

@@ -2,7 +2,8 @@ import FontText from "@/components/common/FontText";
 import IconButton from "@/components/common/IconButton";
 import { COLORS } from "@/constants/colors";
 import { FONT_SIZES, SPACING } from "@/constants/sizes";
-import { mockChatItem } from "@/mock/chat";
+import { useGetChatList } from "@/hooks/queries/useChat";
+import { getChatListItem } from "@/types/chat";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import Lucide from "@react-native-vector-icons/lucide";
 import React from "react";
@@ -23,7 +24,8 @@ interface ChatDrawerProps {
   onNewChat: () => void;
   onLanguageChange: () => void;
   onSettings: () => void;
-  onChatHistory: () => void;
+  onChatHistory: (sessionId: getChatListItem["sessionId"]) => void;
+  currentSessionId: number | null;
 }
 
 function ChatDrawer({
@@ -33,24 +35,24 @@ function ChatDrawer({
   onLanguageChange,
   onSettings,
   onChatHistory,
+  currentSessionId,
 }: ChatDrawerProps) {
   const { width } = useWindowDimensions();
   const drawerWidth = Math.min(width * 0.8, 320); // 최대 320px
 
   const { t } = useTranslation();
 
-  const mockChatItemData = mockChatItem;
+  const { data: chatList } = useGetChatList(visible);
 
   return (
     <Modal
       visible={visible}
       transparent
-      animationType="fade"
       onRequestClose={onClose}
     >
-      {/* 배경 Overlay */}
-      <Pressable style={styles.overlay} onPress={onClose}>
-        {/* 드로어 컨테이너 */}
+      <View style={styles.overlay}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+
         <View style={[styles.drawerContainer, { width: drawerWidth }]}>
           <SafeAreaView style={styles.safeArea}>
             {/* 헤더 */}
@@ -103,11 +105,7 @@ function ChatDrawer({
 
                 {/* auth 관련 */}
                 <Pressable style={styles.menuItem} onPress={onSettings}>
-                  <Lucide
-                    name="settings"
-                    size={20}
-                    color={COLORS.MOEL_BLUE}
-                  />
+                  <Lucide name="settings" size={20} color={COLORS.MOEL_BLUE} />
                   <FontText
                     weight="medium"
                     size={FONT_SIZES.BODY}
@@ -123,46 +121,54 @@ function ChatDrawer({
               <View style={styles.divider} />
 
               {/* 대화 목록 */}
-              <View style={styles.historySection}>
-                <View style={styles.historyItemHeader}>
-                  <MaterialIcons
-                    name="chat-bubble-outline"
-                    size={20}
-                    color={COLORS.MOEL_BLUE}
-                  />
-                  <FontText
-                    weight="medium"
-                    size={FONT_SIZES.BODY}
-                    color={COLORS.BLACK}
-                    style={styles.sectionTitle}
-                  >
-                    {t("chat.drawer_chat_history")}
-                  </FontText>
-                </View>
-
-                {mockChatItemData.map((title, index) => (
-                  <Pressable
-                    key={index}
-                    style={[
-                      styles.historyItem,
-                      index === 0 && styles.historyItemSelected,
-                    ]}
-                    onPress={onChatHistory}
-                  >
+              {chatList && chatList.length > 0 && (
+                <View style={styles.historySection}>
+                  <View style={styles.historyItemHeader}>
+                    <MaterialIcons
+                      name="chat-bubble-outline"
+                      size={20}
+                      color={COLORS.MOEL_BLUE}
+                    />
                     <FontText
-                      size={FONT_SIZES.CAPTION}
-                      color={index === 0 ? COLORS.WHITE : COLORS.BLACK}
-                      style={styles.historyText}
+                      weight="medium"
+                      size={FONT_SIZES.BODY}
+                      color={COLORS.BLACK}
+                      style={styles.sectionTitle}
                     >
-                      {title}
+                      {t("chat.drawer_chat_history")}
                     </FontText>
-                  </Pressable>
-                ))}
-              </View>
+                  </View>
+
+                  {chatList.map((item) => {
+                    const isSelected = item.sessionId === currentSessionId;
+
+                    return (
+                      <Pressable
+                        key={item.sessionId}
+                        style={[
+                          styles.historyItem,
+                          isSelected && styles.historyItemSelected,
+                        ]}
+                        onPress={() => onChatHistory(item.sessionId)}
+                      >
+                        <FontText
+                          weight={isSelected ? "semibold" : "regular"}
+                          size={FONT_SIZES.CAPTION}
+                          color={isSelected ? COLORS.WHITE : COLORS.BLACK}
+                          style={styles.historyText}
+                          numberOfLines={1}
+                        >
+                          {item.title || t("chat.drawer_new_chat") + " " + item.sessionId}
+                        </FontText>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              )}
             </ScrollView>
           </SafeAreaView>
         </View>
-      </Pressable>
+      </View>
     </Modal>
   );
 }

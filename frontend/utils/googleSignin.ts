@@ -1,5 +1,4 @@
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
-import { dev } from "./dev";
 
 /**
  * GoogleSignin 1회 초기화

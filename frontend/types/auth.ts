@@ -8,7 +8,7 @@ export interface LoginRequestDTO {
 // 로그인 응답
 export interface LoginResponseDTO {
   status: string;
-  userId: string;
+  userId: number;
   accessToken: string;
   refreshToken: string;
 }
@@ -26,7 +26,7 @@ export interface SignupRequestDTO {
 
 // 회원가입 응답
 export interface SignupResponseDTO {
-  userId: string;
+  userId: number;
   accessToken: string;
   refreshToken: string;
 }
