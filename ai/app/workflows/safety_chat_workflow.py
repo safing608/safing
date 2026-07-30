@@ -16,6 +16,7 @@ from app.schemas.sse import (
     SafetyStepEvent,
     format_sse,
 )
+from app.services.llm_safety_response_generator import LlmSafetyResponseError
 
 
 logger = logging.getLogger(__name__)
@@ -53,6 +54,10 @@ class SafetyChatWorkflow:
 
         try:
             state = await self.safety_responder.run(state)
+        except LlmSafetyResponseError as exc:
+            logger.exception("Safety response generation failed.")
+            yield self._error_sse(exc.error_code)
+            return
         except Exception:
             logger.exception("Safety response generation failed.")
             yield self._error_sse(ErrorCode.LLM_GENERATION_FAILED)

@@ -111,14 +111,17 @@ class SafetyResponseAgent:
         self,
         response_generator: LlmSafetyResponseGenerator | None = None,
         risk_type_name_resolver: RiskTypeNameResolver | None = None,
+        minimum_evidence_score: float = 0.12,
     ) -> None:
         self.response_generator = response_generator or LlmSafetyResponseGenerator()
         self.risk_type_name_resolver = risk_type_name_resolver or RiskTypeNameResolver()
+        self.minimum_evidence_score = minimum_evidence_score
 
     async def run(self, state: SafetyChatState) -> SafetyChatState:
-        response = self.response_generator.generate(state)
-        if response is None:
+        if not self._has_sufficient_evidence(state):
             response = self._fallback_response(state)
+        else:
+            response = self.response_generator.generate(state)
 
         state.safety_steps = [
             SafetyStep(index=index, text=text)
@@ -129,7 +132,7 @@ class SafetyResponseAgent:
 
     def _fallback_response(self, state: SafetyChatState) -> SafetyResponseResult:
         fallback = FALLBACK_MESSAGES.get(state.target_language, FALLBACK_MESSAGES["ko"])
-        if not state.retrieved_chunks:
+        if not self._has_sufficient_evidence(state):
             return SafetyResponseResult(
                 safetySteps=fallback["steps"],
                 answer=fallback["insufficient_answer"],
@@ -147,6 +150,12 @@ class SafetyResponseAgent:
                 document_name=document_name,
                 evidence_summary=evidence_summary,
             ),
+        )
+
+    def _has_sufficient_evidence(self, state: SafetyChatState) -> bool:
+        return any(
+            chunk.score >= self.minimum_evidence_score
+            for chunk in state.retrieved_chunks
         )
 
     def _summarize_evidence(self, content: str, language: str = "ko") -> str:
