@@ -118,9 +118,10 @@ class SafetyResponseAgent:
         self.minimum_evidence_score = minimum_evidence_score
 
     async def run(self, state: SafetyChatState) -> SafetyChatState:
-        response = self.response_generator.generate(state)
-        if response is None:
+        if not self._has_sufficient_evidence(state):
             response = self._fallback_response(state)
+        else:
+            response = self.response_generator.generate(state)
 
         state.safety_steps = [
             SafetyStep(index=index, text=text)

@@ -6,6 +6,7 @@ from pydantic import ValidationError
 
 from app.config.settings import settings
 from app.schemas.chat import RetrievedChunk, SafetyChatState
+from app.schemas.error import ErrorCode
 from app.schemas.safety_response import SafetyResponseResult
 
 
@@ -16,6 +17,12 @@ TARGET_LANGUAGE_NAMES = {
     "ne": "Nepali",
     "km": "Khmer",
 }
+
+
+class LlmSafetyResponseError(Exception):
+    def __init__(self, error_code: ErrorCode, message: str | None = None) -> None:
+        self.error_code = error_code
+        super().__init__(message or error_code.value)
 
 
 class LlmSafetyResponseGenerator:
@@ -32,14 +39,28 @@ class LlmSafetyResponseGenerator:
         self.timeout_seconds = timeout_seconds or settings.openai_timeout_seconds
 
     def generate(self, state: SafetyChatState) -> SafetyResponseResult | None:
-        if not self.api_key or not state.retrieved_chunks:
+        if not state.retrieved_chunks:
             return None
+
+        if not self.api_key:
+            raise LlmSafetyResponseError(
+                ErrorCode.LLM_GENERATION_FAILED,
+                "OpenAI API key is not configured.",
+            )
 
         try:
             response = self._request(state)
             return SafetyResponseResult.model_validate_json(response)
-        except (httpx.HTTPError, json.JSONDecodeError, ValidationError, ValueError):
-            return None
+        except httpx.TimeoutException as exc:
+            raise LlmSafetyResponseError(ErrorCode.LLM_TIMEOUT) from exc
+        except httpx.HTTPStatusError as exc:
+            if exc.response.status_code == 429:
+                raise LlmSafetyResponseError(ErrorCode.LLM_RATE_LIMITED) from exc
+            raise LlmSafetyResponseError(ErrorCode.LLM_GENERATION_FAILED) from exc
+        except httpx.HTTPError as exc:
+            raise LlmSafetyResponseError(ErrorCode.LLM_GENERATION_FAILED) from exc
+        except (json.JSONDecodeError, ValidationError, ValueError) as exc:
+            raise LlmSafetyResponseError(ErrorCode.LLM_GENERATION_FAILED) from exc
 
     def _request(self, state: SafetyChatState) -> str:
         target_language_name = TARGET_LANGUAGE_NAMES.get(state.target_language, "Korean")
