@@ -127,7 +127,7 @@ class LlmRiskCorrector:
                     },
                 }
             },
-            "max_output_tokens": 200,
+            "max_output_tokens": 1000,
         }
         headers = {
             "Authorization": f"Bearer {self.api_key}",
@@ -195,7 +195,7 @@ class LlmRiskCorrector:
                     },
                 }
             },
-            "max_output_tokens": 200,
+            "max_output_tokens": 1000,
         }
         headers = {
             "Authorization": f"Bearer {self.api_key}",
