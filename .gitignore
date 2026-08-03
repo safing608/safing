@@ -560,4 +560,27 @@ Network Trash Folder
 Temporary Items
 .apdisk
 
+# Nginx SSL 인증서 및 키 (보안 민감 정보)
+*.crt
+*.key
+*.pem
+/nginx/certs/
+
+# Nginx log 
+*.log
+/nginx/logs/
+
+# Docker  
+/docker/data/
+/nginx/html/
+.dockerprod
+
+# certbot
+certbot/
+certbot/conf/
+certbot/www/
+
+# DB
+postgres_data/
+
 # End of https://www.toptal.com/developers/gitignore/api/reactnative,python,java,intellij
