@@ -1,0 +1,72 @@
+services:
+  # DB (PostgreSQL:16, pgvector)
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: safing-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # AI (FastAPI)
+  ai:
+    build: ghcr.io/ppnyoong9/safing/safing-ai:latest
+    container_name: safing-ai
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+
+  # BE (Spring Boot)
+  backend:
+    build: ghcr.io/ppnyoong9/safing/safing-backend:latest
+    container_name: safing-backend
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+
+  # Nginx
+  nginx:
+    image: nginx:stable-alpine
+    container_name: safing-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80" 
+      - "443:443"
+    env_file:
+      - .env
+    volumes:
+      - ./nginx/default.conf.template:/etc/nginx/templates/default.conf.template
+      # nginx reload 실행 스크립트
+      - ./nginx/reload-entrypoint.sh:/reload-entrypoint.sh:ro
+      # 인증서 공유 폴더
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    entrypoint: "/reload-entrypoint.sh"
+    depends_on:
+      - backend
+      - ai
+
+  certbot:
+    image: certbot/certbot
+    container_name: safing-certbot
+    volumes:
+      # Nginx와 동일한 경로를 바라보게 하여 인증용 파일을 주고받음
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    # 인증서 발급 후 일시 정지 상태를 유지하도록 설정
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done'"
+
+
+volumes:
+  postgres_data:
