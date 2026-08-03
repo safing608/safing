@@ -4,5 +4,4 @@
 .git
 .github
 .gradle
-build/
 out/
