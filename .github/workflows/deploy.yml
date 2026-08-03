@@ -101,7 +101,7 @@ jobs:
           tags: ghcr.io/${{ github.repository }}/safing-ai:latest
 
   # -------------------------------------------------------------
-  # 4. SSAFY 서버 배포 (CD)
+  # 4. SAFING 서버 배포 (CD)
   # -------------------------------------------------------------
   deploy:
     needs: [changes, build-backend, build-ai]
