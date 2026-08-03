@@ -13,7 +13,7 @@ services:
 
   # AI (FastAPI)
   ai:
-    build: ./ai
+    build: ghcr.io/ppnyoong9/safing/safing-ai:latest
     container_name: safing-ai
     restart: unless-stopped
     ports:
@@ -25,7 +25,7 @@ services:
 
   # BE (Spring Boot)
   backend:
-    build: ./backend
+    build: ghcr.io/ppnyoong9/safing/safing-backend:latest
     container_name: safing-backend
     restart: unless-stopped
     ports:
