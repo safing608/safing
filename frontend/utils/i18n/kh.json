@@ -1,0 +1,38 @@
+{
+  "translation": {
+    "chat": {
+      "welcome_message": "សួស្តី!",
+      "start_message": "សូមសួរនូវរាល់សំណួរស្តីពីសុវត្ថិភាព ឬហានិភ័យនានាបានគ្រប់ពេលក្នុងអំឡុងពេលធ្វើការ។",
+      "input_placeholder": "សូមបញ្ចូលសំណួររបស់អ្នក។",
+      "drawer_new_chat": "ការសន្ទនាថ្មី",
+      "drawer_language": "ប្តូរភាសា",
+      "drawer_chat_history": "ប្រវត្តិសន្ទនា",
+      "risk_type_name": "ប្រភេទហានិភ័យ",
+      "delete_chat_success": "ការសន្ទនាត្រូវបានលុប។",
+      "delete_chat_failed": "បរាជ័យក្នុងការលុបការសន្ទនា។"
+    },
+    "language": {
+      "select_language": "សូមជ្រើសរើសភាសា។",
+      "changed": "ភាសាត្រូវបានផ្លាស់ប្តូរ។"
+    },
+    "auth": {
+      "settings": "ការកំណត់គណនី",
+      "logout": "ចាកចេញ",
+      "delete_account": "លុបគណនី",
+      "delete": "លុប",
+      "delete_account_confirm": "តើអ្នកពិតជាចង់លុបគណនីរបស់អ្នកមែនទេ?",
+      "login_failed": "មានបញ្ហាកើតឡើងកំឡុងពេលចូលគណនី។",
+      "logout_failed": "មានបញ្ហាកើតឡើងកំឡុងពេលចាកចេញ។"
+    },
+    "common": {
+      "cancel": "បោះបង់",
+      "confirm": "បញ្ជាក់"
+    },
+    "error": {
+      "common_error": "មានបញ្ហាកើតឡើង។ សូមព្យាយាមម្តងទៀតនៅពេលក្រោយ។",
+      "default_error": "មានបញ្ហាកើតឡើង។",
+      "stream_stopped": "ការបង្កើតចម្លើយត្រូវបានបញ្ឈប់។",
+      "stream_failed": "បរាជ័យក្នុងការបង្កើតចម្លើយ AI។"
+    }
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "cli": {
+    "version": ">= 20.4.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": {
+        "GOOGLE_SERVICES_JSON": "@GOOGLE_SERVICES_JSON",
+        "GOOGLE_INFO_JSON": "@GOOGLE_INFO_JSON",
+        "IOS_URL_SCHEME": "@IOS_URL_SCHEME"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "env": {
+        "GOOGLE_SERVICES_JSON": "@GOOGLE_SERVICES_JSON",
+        "IOS_URL_SCHEME": "@IOS_URL_SCHEME"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "env": {
+        "GOOGLE_SERVICES_JSON": "@GOOGLE_SERVICES_JSON",
+        "GOOGLE_INFO_JSON": "@GOOGLE_INFO_JSON"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}

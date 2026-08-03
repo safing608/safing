@@ -1,0 +1,38 @@
+{
+  "translation": {
+    "chat": {
+      "welcome_message": "Xin chào!",
+      "start_message": "Hãy thoải mái đặt câu hỏi bất cứ lúc nào về các vấn đề an toàn hoặc mối nguy hiểm trong quá trình làm việc.",
+      "input_placeholder": "Vui lòng nhập câu hỏi của bạn.",
+      "drawer_new_chat": "Cuộc trò chuyện mới",
+      "drawer_language": "Thay đổi ngôn ngữ",
+      "drawer_chat_history": "Lịch sử trò chuyện",
+      "risk_type_name": "Loại rủi ro",
+      "delete_chat_success": "Cuộc trò chuyện đã được xóa.",
+      "delete_chat_failed": "Xóa cuộc trò chuyện thất bại."
+    },
+    "language": {
+      "select_language": "Vui lòng chọn ngôn ngữ.",
+      "changed": "Ngôn ngữ đã được thay đổi."
+    },
+    "auth": {
+      "settings": "Cài đặt tài khoản",
+      "logout": "Đăng xuất",
+      "delete_account": "Xóa tài khoản",
+      "delete": "Xóa",
+      "delete_account_confirm": "Bạn có chắc chắn muốn xóa tài khoản của mình không?",
+      "login_failed": "Đã xảy ra lỗi trong quá trình đăng nhập.",
+      "logout_failed": "Đã xảy ra lỗi trong quá trình đăng xuất."
+    },
+    "common": {
+      "cancel": "Hủy",
+      "confirm": "Xác nhận"
+    },
+    "error": {
+      "common_error": "Đã xảy ra sự cố. Vui lòng thử lại sau.",
+      "default_error": "Đã xảy ra sự cố.",
+      "stream_stopped": "Đã dừng tạo phản hồi.",
+      "stream_failed": "Không thể tạo câu trả lời AI."
+    }
+  }
+}

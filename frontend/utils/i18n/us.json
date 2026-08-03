@@ -1,0 +1,38 @@
+{
+  "translation": {
+    "chat": {
+      "welcome_message": "Hello!",
+      "start_message": "Feel free to ask anytime about safety or hazards while you're at work.",
+      "input_placeholder": "Please enter your question.",
+      "drawer_new_chat": "New Chat",
+      "drawer_language": "Change Language",
+      "drawer_chat_history": "Chat History",
+      "risk_type_name": "Risk Type",
+      "delete_chat_success": "The chat has been deleted.",
+      "delete_chat_failed": "Failed to delete the chat."
+    },
+    "language": {
+      "select_language": "Please select a language.",
+      "changed": "Language has been changed."
+    },
+    "auth": {
+      "settings": "Account Settings",
+      "logout": "Logout",
+      "delete_account": "Delete Account",
+      "delete": "Delete",
+      "delete_account_confirm": "Are you sure you want to delete your account?",
+      "login_failed": "An error occurred while logging in.",
+      "logout_failed": "An error occurred while logging out."
+    },
+    "common": {
+      "cancel": "Cancel",
+      "confirm": "Confirm"
+    },
+    "error": {
+      "common_error": "Something went wrong. Please try again later.",
+      "default_error": "Something went wrong.",
+      "stream_stopped": "Response generation was stopped.",
+      "stream_failed": "Failed to generate an AI response."
+    }
+  }
+}

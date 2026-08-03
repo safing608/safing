@@ -1,0 +1,38 @@
+{
+  "translation": {
+    "chat": {
+      "welcome_message": "नमस्ते!",
+      "start_message": "काम गर्दा सुरक्षा वा जोखिम सम्बन्धी जुनसुकै प्रश्न सोध्न नहिचकिचाउनुहोस्।",
+      "input_placeholder": "कृपया आफ्नो प्रश्न प्रविष्ट गर्नुहोस्।",
+      "drawer_new_chat": "नयाँ कुराकानी",
+      "drawer_language": "भाषा परिवर्तन",
+      "drawer_chat_history": "कुराकानी इतिहास",
+      "risk_type_name": "जोखिमको प्रकार",
+      "delete_chat_success": "कुराकानी मेटाइयो।",
+      "delete_chat_failed": "कुराकानी मेटाउन असफल भयो।"
+    },
+    "language": {
+      "select_language": "कृपया भाषा छान्नुहोस्।",
+      "changed": "भाषा परिवर्तन भयो।"
+    },
+    "auth": {
+      "settings": "खाता सेटिङहरू",
+      "logout": "लगआउट",
+      "delete_account": "खाता मेटाउनुहोस्",
+      "delete": "मेटाउनुहोस्",
+      "delete_account_confirm": "के तपाईं आफ्नो खाता मेटाउन चाहनुहुन्छ?",
+      "login_failed": "लगइन गर्दा त्रुटि भयो।",
+      "logout_failed": "लगआउट गर्दा त्रुटि भयो।"
+    },
+    "common": {
+      "cancel": "रद्द गर्नुहोस्",
+      "confirm": "पुष्टि गर्नुहोस्"
+    },
+    "error": {
+      "common_error": "केही समस्या भयो। कृपया केही समयपछि पुनः प्रयास गर्नुहोस्।",
+      "default_error": "केही समस्या भयो।",
+      "stream_stopped": "जवाफ सिर्जना रोकियो।",
+      "stream_failed": "AI जवाफ सिर्जना असफल भयो।"
+    }
+  }
+}
