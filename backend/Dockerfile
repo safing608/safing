@@ -4,8 +4,8 @@ FROM eclipse-temurin:21-jdk-alpine
 # 작업 디렉토리 설정
 WORKDIR /app
 
-# 윈도우에서 빌드해서 MobaXterm으로 올릴 jar 파일을 컨테이너 내부로 복사
-COPY *.jar app.jar
+# 완성된 jar 파일 복사
+COPY build/libs/*.jar app.jar
 
 # 8080 포트 사용
 EXPOSE 8080
