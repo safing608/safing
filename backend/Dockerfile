@@ -5,7 +5,7 @@ FROM eclipse-temurin:21-jdk-alpine
 WORKDIR /app
 
 # 완성된 jar 파일 복사
-COPY build/libs/*.jar app.jar
+COPY ./build/libs/*.jar app.jar
 
 # 8080 포트 사용
 EXPOSE 8080
