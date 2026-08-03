@@ -9,6 +9,7 @@ on:
       - 'ai/**'
       - 'nginx/**'
       - 'docker-compose.yml'
+    workflow_dispatch:
 
 # GHCR (GitHub Container Registry) 이미지 쓰기 권한
 permissions:
