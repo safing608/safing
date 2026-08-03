@@ -3,9 +3,8 @@ import FontText from "@/components/common/FontText";
 import { COLORS } from "@/constants/colors";
 import { FONT_SIZES, SPACING } from "@/constants/sizes";
 import { useAuthStore } from "@/stores/authStore";
-import { dev } from "@/utils/dev";
 import { Image } from "expo-image";
-import { router, SplashScreen } from "expo-router";
+import { router } from "expo-router";
 import React, { useEffect } from "react";
 import { StyleSheet, useWindowDimensions, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -14,30 +13,29 @@ interface OnboardingScreenProps {}
 
 // 해당 경로는 SPLASH SCREEN
 function OnboardingScreen({}: OnboardingScreenProps) {
-  const { refreshToken } = useAuthStore.getState();
-
-  useEffect(() => {
-    SplashScreen.hideAsync();
-  }, []);
-
+  // 첫 진입 시 토큰 갱신으로 토큰 유효성 검사
   useEffect(() => {
     const initializeApp = async () => {
       try {
-        // 토큰 유효성 검증
-        await reissueToken(refreshToken ?? "");
+        const { refreshToken, updateTokens } = useAuthStore.getState();
 
-        // 스플래시 화면 최소 표시 시간 (1.2초)
-        await new Promise((resolve) => setTimeout(resolve, 1200));
+        if (!refreshToken) {
+          router.replace("/login");
+          return;
+        }
+
+        // 토큰 유효성 검증
+        const data = await reissueToken(refreshToken);
+        await updateTokens(data.accessToken, data.refreshToken);
 
         router.replace("/chat");
       } catch (error) {
-        dev.error("토큰 갱신 실패:", error);
-        router.replace("/login");
+        await useAuthStore.getState().logout("/login");
       }
     };
 
     initializeApp();
-  }, [refreshToken]);
+  }, []);
 
   const { width } = useWindowDimensions();
   // SVG 원본 비율: 694:778 (가로:세로)

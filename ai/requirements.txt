@@ -21,6 +21,7 @@ pydantic_core==2.46.4
 pydantic-settings==2.12.0
 fastapi==0.124.4
 pymupdf==1.28.0
+psycopg[binary]>=3.2.0
 PyYAML==6.0.3
 requests==2.34.2
 requests-toolbelt==1.0.0

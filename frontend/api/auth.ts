@@ -8,7 +8,7 @@ import axiosInstance from "./axios";
 // 회원가입 API
 export async function signup(payload: SignupRequestDTO) {
   const response = await axiosInstance.post(
-    "/api/auth/google/signup",
+    "/auth/google/signup",
     payload,
     {
       headers: {
@@ -17,7 +17,7 @@ export async function signup(payload: SignupRequestDTO) {
     },
   );
 
-  // 409 중복 회원가입 시 1초 후 /api/auth/google을 1회 재호출하여 가입 상태를 다시 확인
+  // 409 중복 회원가입 시 1초 후 /auth/google을 1회 재호출하여 가입 상태를 다시 확인
   if (response.status === 409) {
     await new Promise((resolve) => setTimeout(resolve, 1000));
     const data = await login({ idToken: payload.idToken });
@@ -29,7 +29,7 @@ export async function signup(payload: SignupRequestDTO) {
 
 // 로그인 API
 export async function login(payload: LoginRequestDTO) {
-  const response = await axiosInstance.post("/api/auth/google", payload, {
+  const response = await axiosInstance.post("/auth/google", payload, {
     headers: {
       Authorization: undefined,
     },
@@ -40,7 +40,7 @@ export async function login(payload: LoginRequestDTO) {
 
 // 로그아웃 API
 export async function logout(payload: LogoutRequestDTO) {
-  const response = await axiosInstance.post("/api/auth/logout", payload);
+  const response = await axiosInstance.post("/auth/logout", payload);
 
   if (response.status !== 200) {
     throw new Error();
@@ -51,7 +51,7 @@ export async function logout(payload: LogoutRequestDTO) {
 // 토큰 갱신 API
 export async function reissueToken(refreshToken: string) {
   const response = await axiosInstance.post(
-    "/api/auth/reissue",
+    "/auth/reissue",
     { refreshToken },
     {
       headers: {

@@ -1,10 +1,22 @@
 import ChatBubble from "@/components/chat/ChatBubble";
-import ChatInput from "@/components/chat/ChatInput";
+import ChatInput, { ChatInputHandle } from "@/components/chat/ChatInput";
 import { COLORS } from "@/constants/colors";
 import { SPACING } from "@/constants/sizes";
+import {
+  useGetChat,
+  useRetryQuestion,
+  useSendQuestion,
+} from "@/hooks/queries/useChat";
+import { useChatStream } from "@/hooks/useChatStream";
 import useKeyboard from "@/hooks/useKeyboard";
-import { mockChatContent } from "@/mock/chat";
-import React, { useEffect, useRef, useState } from "react";
+import { useChatStreamStore } from "@/stores/chatStreamStore";
+import {
+  clearMessageErrorInCache,
+  markMessageAsPastError,
+} from "@/utils/chatCache";
+import { dev } from "@/utils/dev";
+import { useLocalSearchParams } from "expo-router";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Animated,
   LayoutChangeEvent,
@@ -14,23 +26,56 @@ import {
   View,
 } from "react-native";
 
-interface ChatRoomScreenProps {}
-
-function ChatRoomScreen({}: ChatRoomScreenProps) {
+function ChatRoomScreen() {
   const { isKeyboardVisible, keyboardHeight } = useKeyboard();
-  const mockChatContentData = mockChatContent;
 
   const [inputHeight, setInputHeight] = useState(0);
 
   const animatedBottom = useRef(new Animated.Value(0)).current;
+  const scrollViewRef = useRef<ScrollView>(null);
+  const chatInputRef = useRef<ChatInputHandle>(null);
 
-  // 플랫폼별 입력창 bottom 위치 계산
-  // iOS: keyboardWillShow로 미리 감지 → 애니메이션 duration 맞춰야 함
-  // Android: SafeAreaView가 감싸고 있으므로 keyboardHeight에서 paddingVertical만큼 차감
+  const { id: sessionIdParam } = useLocalSearchParams<{ id: string }>();
+  const sessionId = Number(sessionIdParam);
+
+  const { data: chat } = useGetChat(sessionId);
+  const { mutate: sendQuestion, isPending: isSendPending } = useSendQuestion();
+  const { mutate: retryQuestion, isPending: isRetryPending } =
+    useRetryQuestion();
+
+  const {
+    content: streamContent,
+    riskTypeName: streamRiskTypeName,
+    riskTypeCode: streamRiskTypeCode,
+    isStreaming,
+    stop,
+    userMessageId,
+    lastUserContent,
+    assistantMessageId,
+  } = useChatStream(sessionId);
+
+  const isBusy = isSendPending || isRetryPending || isStreaming;
+
+  const scrollToBottom = useCallback((animated = true) => {
+    requestAnimationFrame(() => {
+      scrollViewRef.current?.scrollToEnd({ animated });
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!chat?.length) return;
+    scrollToBottom(true);
+  }, [chat?.length, scrollToBottom]);
+
+  useEffect(() => {
+    if (!isStreaming) return;
+    scrollToBottom(false);
+  }, [streamContent, isStreaming, scrollToBottom]);
+
   const targetBottomPosition = isKeyboardVisible
     ? Platform.OS === "ios"
-      ? keyboardHeight // iOS: SafeAreaView 내부 좌표계에서 keyboardHeight 그대로 사용
-      : keyboardHeight - SPACING.XS // Android: paddingVertical(SPACING.XS) 상쇄
+      ? keyboardHeight
+      : keyboardHeight - SPACING.XS
     : 0;
 
   useEffect(() => {
@@ -39,18 +84,73 @@ function ChatRoomScreen({}: ChatRoomScreenProps) {
       duration: Platform.OS === "ios" ? 250 : 200,
       useNativeDriver: false,
     }).start();
-  }, [targetBottomPosition]);
+  }, [targetBottomPosition, animatedBottom]);
 
   const handleInputLayout = (e: LayoutChangeEvent) => {
     setInputHeight(e.nativeEvent.layout.height);
   };
 
-  // 실제 측정된 inputHeight + 키보드 위치 = 정확한 paddingBottom
+  const handleSendQuestion = (content: string) => {
+    if (isBusy) return;
+
+    const stream = useChatStreamStore.getState().streams[sessionId];
+
+    if (stream?.userMessageId != null) {
+      clearMessageErrorInCache(sessionId, stream.userMessageId);
+    }
+
+    if (stream?.assistantMessageId != null) {
+      dev.log(stream.assistantMessageId);
+      // clearMessageErrorInCache(sessionId, stream.assistantMessageId);
+      markMessageAsPastError(sessionId, stream.assistantMessageId);
+    }
+
+    // 이전 에러 스트림 상태 정리
+    useChatStreamStore.getState().clearStream(sessionId);
+    sendQuestion({ sessionId, content });
+  };
+
+  const handleRetryUser = (messageId: number, content: string) => {
+    if (isBusy) return;
+    sendQuestion({
+      sessionId,
+      content,
+      tempMessageId: messageId,
+    });
+  };
+
+  const handleRetryAssistant = (messageId?: number) => {
+    if (isBusy) return;
+    const targetMessageId = messageId ?? assistantMessageId;
+    if (targetMessageId) {
+      retryQuestion({ sessionId, messageId: targetMessageId });
+      return;
+    }
+    if (lastUserContent) {
+      handleRetryUser(userMessageId ?? -Date.now(), lastUserContent);
+    }
+  };
+
   const scrollPaddingBottom = inputHeight + targetBottomPosition + SPACING.XS;
+
+  // PROCESSING / 현재 스트리밍 중인 assistant는 캐시 버블 숨김 (스트림 버블만 표시)
+  const visibleMessages = (chat ?? []).filter((item) => {
+    if (item.role !== "ASSISTANT") return true;
+    if (item.status === "PROCESSING") return false;
+    if (
+      isStreaming &&
+      assistantMessageId != null &&
+      item.messageId === assistantMessageId
+    ) {
+      return false;
+    }
+    return true;
+  });
 
   return (
     <View style={styles.container}>
       <ScrollView
+        ref={scrollViewRef}
         style={styles.scrollView}
         contentContainerStyle={[
           styles.chatContentContainer,
@@ -58,22 +158,56 @@ function ChatRoomScreen({}: ChatRoomScreenProps) {
         ]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
+        onContentSizeChange={() => scrollToBottom(false)}
       >
-        {mockChatContentData.map((item) => (
+        {visibleMessages.map((item) => {
+          const role = item.role as "USER" | "ASSISTANT";
+          const isUser = role === "USER";
+          return (
+            <ChatBubble
+              key={item.messageId}
+              role={role}
+              text={item.content ?? ""}
+              riskTypeName={item.riskTypeName ?? ""}
+              riskTypeCode={item.riskTypeCode ?? ""}
+              status={item.status ?? ""}
+              userError={isUser ? (item.errorMessage ?? "") : ""}
+              assistantError={!isUser ? (item.errorMessage ?? "") : ""}
+              retryDisabled={isBusy}
+              retryable={item.retryable ?? true}
+              onRetry={() => {
+                if (isUser) {
+                  handleRetryUser(item.messageId, item.content ?? "");
+                } else {
+                  handleRetryAssistant(item.messageId);
+                }
+              }}
+            />
+          );
+        })}
+
+        {/* 스트리밍 중인 답변 */}
+        {isStreaming && (
           <ChatBubble
-            key={item.id}
-            role={item.role as "user" | "assistant"}
-            text={item.text as string}
+            role="ASSISTANT"
+            text={streamContent}
+            riskTypeName={streamRiskTypeName ?? ""}
+            riskTypeCode={streamRiskTypeCode ?? ""}
           />
-        ))}
+        )}
       </ScrollView>
 
-      {/* 채팅 input 컨테이너 */}
       <Animated.View
         style={[styles.chatInputContainer, { bottom: animatedBottom }]}
         onLayout={handleInputLayout}
       >
-        <ChatInput />
+        <ChatInput
+          ref={chatInputRef}
+          onSend={handleSendQuestion}
+          onStop={stop}
+          isStreaming={isStreaming}
+          disabled={isBusy && !isStreaming}
+        />
         <View style={styles.bottomSpacer} />
       </Animated.View>
     </View>

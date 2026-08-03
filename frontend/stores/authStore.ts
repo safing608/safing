@@ -11,6 +11,7 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { useUserStore } from "./userStore";
 import { CountryCode, DEFAULT_LANGUAGE } from "@/constants/i18n";
+import queryClient from "@/api/client";
 
 interface AuthState {
   accessToken: string | null;
@@ -26,7 +27,7 @@ interface AuthState {
     countryCode: string,
   ) => Promise<void>;
   logout: (redirectTo?: string) => Promise<void>;
-  updateAccessToken: (accessToken: string) => Promise<void>;
+  updateTokens: (accessToken: string, refreshToken: string) => Promise<void>;
   restoreTokens: () => Promise<void>;
 }
 
@@ -72,6 +73,9 @@ export const useAuthStore = create<AuthState>()(
         // 언어설정 초기화
         useUserStore.getState().resetUser();
 
+        // 캐시 초기화
+        queryClient.clear();
+
         set({
           accessToken: null,
           refreshToken: null,
@@ -85,10 +89,11 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      //updateAccessToken action
-      updateAccessToken: async (accessToken: string) => {
+      // 토큰 갱신
+      updateTokens: async (accessToken: string, refreshToken: string) => {
         await saveSecureStore("accessToken", accessToken);
-        set({ accessToken });
+        await saveSecureStore("refreshToken", refreshToken);
+        set({ accessToken, refreshToken });
       },
 
       // SecureStore에서 토큰 복원
@@ -102,10 +107,15 @@ export const useAuthStore = create<AuthState>()(
               accessToken,
               refreshToken,
               isAuthenticated: true,
+              isHydrated: true,
             });
+            return;
           }
+
+          set({ isHydrated: true });
         } catch (error) {
           dev.error("토큰 복원 실패:", error);
+          set({ isHydrated: true });
         }
       },
     }),

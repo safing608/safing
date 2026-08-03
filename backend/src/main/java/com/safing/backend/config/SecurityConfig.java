@@ -12,6 +12,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import jakarta.servlet.DispatcherType;
 
 @Configuration // Spring 설정 파일이라고 알려주는 어노테이션
 @EnableWebSecurity // Spring Security를 활성화하도록 준비 (인증, 인가, 보안필터, 로그인 등)
@@ -49,6 +50,8 @@ public class SecurityConfig {
 
                 // API별 접근 권한 설정
                 .authorizeHttpRequests(auth -> auth
+                        .dispatcherTypeMatchers(DispatcherType.ASYNC,DispatcherType.ERROR).permitAll()
+                        .requestMatchers("/error").permitAll()
                         // 인증 없이 접근 가능한 API
                         .requestMatchers(
                                 "/api/auth/google", // Google 로그인/회원가입 진입

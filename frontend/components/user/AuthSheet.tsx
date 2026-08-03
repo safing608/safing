@@ -4,7 +4,6 @@ import { COLORS } from "@/constants/colors";
 import { FONT_SIZES, SPACING } from "@/constants/sizes";
 import { useModalAnimation } from "@/hooks/useModalAnimation";
 import { useAuthStore } from "@/stores/authStore";
-import { useUserStore } from "@/stores/userStore";
 import { dev } from "@/utils/dev";
 import Lucide from "@react-native-vector-icons/lucide";
 import { router } from "expo-router";
@@ -19,7 +18,6 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Toast from "react-native-toast-message";
 
 interface AuthSheetProps {
   visible: boolean;
@@ -31,23 +29,23 @@ function AuthSheet({ visible, onClose }: AuthSheetProps) {
   const [loading, setLoading] = useState(false);
   const { t } = useTranslation();
   const { logout: logoutAction, refreshToken } = useAuthStore.getState();
-  const { overlayOpacity, sheetTranslateY, sheetScale } = useModalAnimation({
+  const { overlayOpacity, sheetTranslateY } = useModalAnimation({
     visible,
   });
 
-  // 로그아웃 핸들러
   const handleLogout = async () => {
     try {
+      setLoading(true);
       await logout({ refreshToken: refreshToken! });
       await logoutAction("/login");
     } catch (error) {
       dev.error("로그아웃 오류:", error);
     } finally {
+      setLoading(false);
       router.replace("/login");
     }
   };
 
-  // 회원탈퇴 핸들러
   const handleDeleteAccount = useCallback(() => {
     Alert.alert(t("auth.delete_account"), t("auth.delete_account_confirm"), [
       {
@@ -63,7 +61,7 @@ function AuthSheet({ visible, onClose }: AuthSheetProps) {
         },
       },
     ]);
-  }, [onClose]);
+  }, [onClose, t]);
 
   return (
     <Modal
@@ -71,105 +69,102 @@ function AuthSheet({ visible, onClose }: AuthSheetProps) {
       transparent
       animationType="none"
       onRequestClose={onClose}
+      statusBarTranslucent
     >
-      {/* 오버레이: fade */}
-      <Animated.View style={[styles.overlay, { opacity: overlayOpacity }]}>
+      <View style={styles.root}>
+        <Animated.View
+          style={[styles.overlay, { opacity: overlayOpacity }]}
+          pointerEvents="none"
+        />
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
-      </Animated.View>
 
-      {/* 시트: 아래에서 위로 슬라이드 + 스케일 */}
-      <Animated.View
-        style={[
-          styles.sheet,
-          { paddingBottom: bottom + SPACING.LARGE },
-          {
-            transform: [{ translateY: sheetTranslateY }, { scale: sheetScale }],
-          },
-        ]}
-      >
-        <View style={styles.handle} />
-
-        <FontText
-          weight="semibold"
-          size={FONT_SIZES.BODY}
-          color={COLORS.BLACK}
-          style={styles.title}
+        <Animated.View
+          style={[
+            styles.sheet,
+            { paddingBottom: bottom + SPACING.LARGE },
+            { transform: [{ translateY: sheetTranslateY }] },
+          ]}
         >
-          {t("auth.settings")}
-        </FontText>
+          <View style={styles.handle} />
 
-        {/* 메뉴 옵션 */}
-        <View style={styles.menuContainer}>
-          {/* 로그아웃 */}
-          <Pressable
-            style={({ pressed }) => [
-              styles.menuItem,
-              pressed && styles.menuItemPressed,
-            ]}
-            onPress={handleLogout}
-            disabled={loading}
+          <FontText
+            weight="semibold"
+            size={FONT_SIZES.BODY}
+            color={COLORS.BLACK}
+            style={styles.title}
           >
-            <View style={styles.menuItemContent}>
-              <Lucide
-                name="log-out"
-                size={24}
-                color={COLORS.MOEL_BLUE}
-                style={styles.menuIcon}
-              />
-              <FontText
-                weight="medium"
-                size={FONT_SIZES.BODY}
-                color={COLORS.BLACK}
-              >
-                {t("auth.logout")}
-              </FontText>
-            </View>
-          </Pressable>
+            {t("auth.settings")}
+          </FontText>
 
-          {/* 구분선 */}
-          <View style={styles.separator} />
+          <View style={styles.menuContainer}>
+            <Pressable
+              style={({ pressed }) => [
+                styles.menuItem,
+                pressed && styles.menuItemPressed,
+              ]}
+              onPress={handleLogout}
+              disabled={loading}
+            >
+              <View style={styles.menuItemContent}>
+                <Lucide
+                  name="log-out"
+                  size={24}
+                  color={COLORS.MOEL_BLUE}
+                  style={styles.menuIcon}
+                />
+                <FontText
+                  weight="medium"
+                  size={FONT_SIZES.BODY}
+                  color={COLORS.BLACK}
+                >
+                  {t("auth.logout")}
+                </FontText>
+              </View>
+            </Pressable>
 
-          {/* 회원탈퇴 */}
-          <Pressable
-            style={({ pressed }) => [
-              styles.menuItem,
-              pressed && styles.menuItemPressed,
-            ]}
-            onPress={handleDeleteAccount}
-            disabled={loading}
-          >
-            <View style={styles.menuItemContent}>
-              <Lucide
-                name="user-round-x"
-                size={24}
-                color={COLORS.ERROR_RED}
-                style={styles.menuIcon}
-              />
-              <FontText
-                weight="medium"
-                size={FONT_SIZES.BODY}
-                color={COLORS.ERROR_RED}
-              >
-                {t("auth.delete_account")}
-              </FontText>
-            </View>
-          </Pressable>
-        </View>
-      </Animated.View>
+            <View style={styles.separator} />
+
+            <Pressable
+              style={({ pressed }) => [
+                styles.menuItem,
+                pressed && styles.menuItemPressed,
+              ]}
+              onPress={handleDeleteAccount}
+              disabled={loading}
+            >
+              <View style={styles.menuItemContent}>
+                <Lucide
+                  name="user-round-x"
+                  size={24}
+                  color={COLORS.ERROR_RED}
+                  style={styles.menuIcon}
+                />
+                <FontText
+                  weight="medium"
+                  size={FONT_SIZES.BODY}
+                  color={COLORS.ERROR_RED}
+                >
+                  {t("auth.delete_account")}
+                </FontText>
+              </View>
+            </Pressable>
+          </View>
+        </Animated.View>
+      </View>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    justifyContent: "flex-end",
+  },
   overlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(0,0,0,0.4)",
   },
   sheet: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
     backgroundColor: COLORS.WHITE,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,

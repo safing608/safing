@@ -6,7 +6,10 @@
       "input_placeholder": "कृपया आफ्नो प्रश्न प्रविष्ट गर्नुहोस्।",
       "drawer_new_chat": "नयाँ कुराकानी",
       "drawer_language": "भाषा परिवर्तन",
-      "drawer_chat_history": "कुराकानी इतिहास"
+      "drawer_chat_history": "कुराकानी इतिहास",
+      "risk_type_name": "जोखिमको प्रकार",
+      "delete_chat_success": "कुराकानी मेटाइयो।",
+      "delete_chat_failed": "कुराकानी मेटाउन असफल भयो।"
     },
     "language": {
       "select_language": "कृपया भाषा छान्नुहोस्।",
@@ -26,7 +29,10 @@
       "confirm": "पुष्टि गर्नुहोस्"
     },
     "error": {
-      "common_error": "केही समस्या भयो। कृपया केही समयपछि पुनः प्रयास गर्नुहोस्।"
+      "common_error": "केही समस्या भयो। कृपया केही समयपछि पुनः प्रयास गर्नुहोस्।",
+      "default_error": "केही समस्या भयो।",
+      "stream_stopped": "जवाफ सिर्जना रोकियो।",
+      "stream_failed": "AI जवाफ सिर्जना असफल भयो।"
     }
   }
 }

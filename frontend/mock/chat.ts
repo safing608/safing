@@ -9,14 +9,14 @@ export const mockChatItem = [
 // MOCK: 채팅 내용 데이터 (마크다운 형식)
 export const mockChatContent = [
   {
-    id: 1,
+    messageId: 1,
     role: "user",
-    text: "동료가 전선을 만지고 쓰러졌어요",
+    content: "동료가 전선을 만지고 쓰러졌어요",
   },
   {
-    id: 2,
+    messageId: 2,
     role: "assistant",
-    text: `⚠️ **위험 유형**: 감전 사고가 의심됩니다.
+    content: `⚠️ **위험 유형**: 감전 사고가 의심됩니다.
 
 다음 순서대로 진행해주세요:
 
@@ -28,14 +28,14 @@ export const mockChatContent = [
 > 현재 부상자가 의식이 있나요?`,
   },
   {
-    id: 3,
+    messageId: 3,
     role: "user",
-    text: "의식 없어요",
+    content: "의식 없어요",
   },
   {
-    id: 4,
+    messageId: 4,
     role: "assistant",
-    text: `🚨 **긴급 상황입니다!**
+    content: `🚨 **긴급 상황입니다!**
 
 **즉시 해야 할 일:**
 - 즉시 **119를 호출**하세요
@@ -45,14 +45,14 @@ export const mockChatContent = [
 > ⚠️ **중요**: 구조자는 반드시 감전 방지 장비를 착용해주세요`,
   },
   {
-    id: 5,
+    messageId: 5,
     role: "user",
-    text: "더 많은 내용을 보여주세요",
+    content: "더 많은 내용을 보여주세요",
   },
   {
-    id: 6,
+    messageId: 6,
     role: "assistant",
-    text: `**추가 안전 조치사항:**
+    content: `**추가 안전 조치사항:**
 
 ### 응급처치 단계별 가이드
 
@@ -71,14 +71,14 @@ export const mockChatContent = [
 > **주의사항**: 전문 의료진 도착 전까지 환자를 움직이지 마세요`,
   },
   {
-    id: 7,
+    messageId: 7,
     role: "user",
-    text: "스크롤 테스트를 위한 추가 메시지입니다",
+    content: "스크롤 테스트를 위한 추가 메시지입니다",
   },
   {
-    id: 8,
+    messageId: 8 ,
     role: "assistant",
-    text: `**스크롤 테스트 응답**
+    content: `**스크롤 테스트 응답**
 
 이것은 ScrollView가 제대로 작동하는지 확인하기 위한 **긴 응답**입니다.
 

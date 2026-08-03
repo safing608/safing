@@ -1,16 +1,15 @@
+import { COLORS } from "@/constants/colors";
+import { FONT_SIZES, SIZES, SPACING } from "@/constants/sizes";
 import React, { useState } from "react";
 import {
   Pressable,
   PressableProps,
-  StyleSheet,
-  Text,
   StyleProp,
-  ViewStyle,
+  StyleSheet,
   TextStyle,
   View,
+  ViewStyle
 } from "react-native";
-import { COLORS } from "@/constants/colors";
-import { FONT_SIZES, SIZES, SPACING } from "@/constants/sizes";
 import FontText from "./FontText";
 
 interface ButtonProps extends PressableProps {

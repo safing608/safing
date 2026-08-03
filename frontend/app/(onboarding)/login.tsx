@@ -51,21 +51,15 @@ function LoginScreen() {
 
       // Google 로그인 시도
       const response = await GoogleSignin.signIn();
-
-      if (!isSuccessResponse(response)) {
-        throw new Error();
-      }
+      if (!isSuccessResponse(response)) throw new Error("Google 로그인 실패");
 
       const idToken = response.data.idToken;
-
-      if (!idToken) {
-        throw new Error();
-      }
-
-      dev.log("Google idToken 획득:", idToken ? "획득" : "없음");
+      if (!idToken) throw new Error("Google idToken 획득 실패");
+      dev.log("Google idToken 획득");
 
       const data = await login({ idToken });
 
+      // 첫 회원: 언어 선택 화면으로 이동
       if (data.status === "SIGNUP_REQUIRED") {
         router.push({
           pathname: "/language",

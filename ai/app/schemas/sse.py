@@ -3,6 +3,9 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from app.schemas.chat import RetrievedSource
+from app.schemas.error import ErrorCode
+
 
 SseEventName = Literal[
     "risk_classification",
@@ -25,7 +28,7 @@ class SafetyStepEvent(BaseModel):
 class FinalAnswerEvent(BaseModel):
     title: str
     answer: str
-    sources: list[int] = Field(default_factory=list)
+    sources: list[RetrievedSource] = Field(default_factory=list)
 
 
 class DoneEvent(BaseModel):
@@ -33,7 +36,7 @@ class DoneEvent(BaseModel):
 
 
 class ErrorEvent(BaseModel):
-    code: str
+    code: ErrorCode
     message: str
 
 
