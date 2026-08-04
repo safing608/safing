@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     openai_risk_model: str = "gpt-5-mini"
     openai_safety_model: str = "gpt-5-nano"
     openai_api_base_url: str = "https://api.openai.com/v1"
-    openai_timeout_seconds: float = 30.0
+    openai_timeout_seconds: float = 90.0
 
     @field_validator("debug", mode="before")
     @classmethod
