@@ -96,6 +96,7 @@ class LlmSafetyResponseGenerator:
                             "responseRules": [
                                 "Keep each sentence short and clear.",
                                 "Return 3 to 5 action steps.",
+                                "Do not prefix safetySteps with numbers or bullets.",
                                 "The answer must be grounded only in retrievedChunks.",
                                 "Do not mention unsupported technical details.",
                                 f"Write safetySteps and answer in {target_language_name}.",
@@ -126,7 +127,7 @@ class LlmSafetyResponseGenerator:
                     },
                 }
             },
-            "max_output_tokens": 800,
+            "max_output_tokens": 8000,
         }
         headers = {
             "Authorization": f"Bearer {self.api_key}",
