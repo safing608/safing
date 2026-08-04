@@ -85,7 +85,7 @@ function ChatBubble({
 
           {/* 사용자 에러 메시지 */}
           {!!userError && (
-            <View style={[styles.errorContainer]}>
+            <View style={[styles.errorContainer, styles.bottomUserErrorContainer]}>
               <FontAwesome6
                 name="circle-exclamation"
                 size={12}
@@ -187,7 +187,7 @@ function ChatBubble({
               </View>
 
               {!!assistantError && (
-                <View style={styles.errorContainer}>
+                <View style={[styles.errorContainer, styles.bottomAssistantErrorContainer]}>
                   <FontAwesome6
                     name="circle-exclamation"
                     size={12}
@@ -303,6 +303,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: SPACING.XS,
     marginVertical: SPACING.SMALL,
+  },
+  bottomUserErrorContainer: {
+    alignSelf: "flex-end",
+  },
+  bottomAssistantErrorContainer: {
+    alignSelf: "flex-start",
   },
   assistantErrorContent: {
     flexDirection: "row",
