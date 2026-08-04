@@ -193,6 +193,7 @@ function ChatRoomScreen() {
             text={streamContent}
             riskTypeName={streamRiskTypeName ?? ""}
             riskTypeCode={streamRiskTypeCode ?? ""}
+            isLoading={!streamContent}
           />
         )}
       </ScrollView>
