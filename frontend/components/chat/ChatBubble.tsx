@@ -11,6 +11,7 @@ import React, { useEffect, useState } from "react";
 import { StyleSheet, View, useWindowDimensions } from "react-native";
 import Markdown from "react-native-markdown-display";
 import { dev } from "@/utils/dev";
+import TypingDots from "../common/TypingDots";
 
 interface ChatBubbleProps {
   role: "USER" | "ASSISTANT";
@@ -20,6 +21,7 @@ interface ChatBubbleProps {
   assistantError?: string;
   riskTypeCode?: string;
   riskTypeName?: string;
+  isLoading?: boolean;
   onRetry?: () => void;
   retryable?: boolean;
   retryDisabled?: boolean; // 재시도/스트리밍 중 중복 요청 방지
@@ -33,6 +35,7 @@ function ChatBubble({
   riskTypeName,
   userError,
   assistantError,
+  isLoading = false,
   onRetry,
   retryable = true,
   retryDisabled = false,
@@ -81,8 +84,8 @@ function ChatBubble({
           </View>
 
           {/* 사용자 에러 메시지 */}
-          {userError && (
-            <View style={[styles.errorContainer]}>
+          {!!userError && (
+            <View style={[styles.errorContainer, styles.bottomUserErrorContainer]}>
               <FontAwesome6
                 name="circle-exclamation"
                 size={12}
@@ -110,7 +113,7 @@ function ChatBubble({
               borderColor={COLORS.LIGHT_GRAY}
               borderWidth={1}
             />
-            {userError && (
+            {!!userError && (
               <IconButton
                 icon={
                   <Lucide
@@ -172,11 +175,19 @@ function ChatBubble({
                   { maxWidth: maxBubbleWidth },
                 ]}
               >
-                <Markdown style={markdownStyles as any}>{text || ""}</Markdown>
+                {isLoading && !text ? (
+                  <View style={styles.loadingContainer}>
+                    <TypingDots color={COLORS.MOEL_BLUE} />
+                  </View>
+                ) : (
+                  <Markdown style={markdownStyles as any}>
+                    {text || ""}
+                  </Markdown>
+                )}
               </View>
 
-              {assistantError && (
-                <View style={styles.errorContainer}>
+              {!!assistantError && (
+                <View style={[styles.errorContainer, styles.bottomAssistantErrorContainer]}>
                   <FontAwesome6
                     name="circle-exclamation"
                     size={12}
@@ -210,7 +221,7 @@ function ChatBubble({
                   borderColor={COLORS.LIGHT_GRAY}
                   borderWidth={1}
                 />
-                {assistantError && retryable && (
+                {!!assistantError && retryable && (
                   <IconButton
                     icon={
                       <Lucide
@@ -293,6 +304,12 @@ const styles = StyleSheet.create({
     gap: SPACING.XS,
     marginVertical: SPACING.SMALL,
   },
+  bottomUserErrorContainer: {
+    alignSelf: "flex-end",
+  },
+  bottomAssistantErrorContainer: {
+    alignSelf: "flex-start",
+  },
   assistantErrorContent: {
     flexDirection: "row",
     alignItems: "center",
@@ -314,6 +331,11 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
     marginTop: SPACING.XS,
     gap: SPACING.XS,
+  },
+  loadingContainer: {
+    minHeight: 24,
+    justifyContent: "center",
+    paddingVertical: SPACING.XS,
   },
 });
 
